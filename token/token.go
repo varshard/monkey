@@ -1,5 +1,7 @@
 package token
 
+type TokenType string
+
 const (
 	Illegal TokenType = "illegal"
 	Eof     TokenType = "Eof"
@@ -16,28 +18,27 @@ const (
 	NotEqual TokenType = "!="
 
 	// Operators
-	Plus TokenType = "+"
-	Minus TokenType = "-"
+	Plus     TokenType = "+"
+	Minus    TokenType = "-"
 	Multiply TokenType = "*"
-	Divide TokenType = "/"
-	Assign    TokenType = "="
-	Not       TokenType = "!"
+	Divide   TokenType = "/"
+	Assign   TokenType = "="
+	Not      TokenType = "!"
 
-	Let TokenType = "let"
+	Let      TokenType = "let"
 	Function TokenType = "fn"
 
-	If TokenType = "if"
+	If   TokenType = "if"
 	Else TokenType = "else"
 
 	Identifier TokenType = "identifier"
+	Integer    TokenType = "integer"
 )
 
-type TokenType string
-
 var reserved = map[string]TokenType{
-	"fn": Function,
-	"let": Let,
-	"if": If,
+	"fn":   Function,
+	"let":  Let,
+	"if":   If,
 	"else": Else,
 }
 
@@ -56,10 +57,10 @@ var symbols = map[byte]TokenType{
 }
 
 type Token struct {
-	Col int
-	Line int
-	Type TokenType
-	Literal string
+	Col      int
+	Line     int
+	Type     TokenType
+	Literal  string
 	Position int
 }
 

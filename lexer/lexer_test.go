@@ -1,13 +1,13 @@
 package lexer
 
 import (
+	"github.com/stretchr/testify/assert"
 	"github.com/varshard/monkeyinterpreter/token"
 	"testing"
-	"github.com/stretchr/testify/assert"
-	)
+)
 
 func TestNextToken(t *testing.T) {
-	t.Run("symbols", func (t *testing.T) {
+	t.Run("symbols", func(t *testing.T) {
 		input := "={}().,;!+- */"
 		l := New(input)
 		tok := l.NextToken()
@@ -54,7 +54,7 @@ func TestNextToken(t *testing.T) {
 		assert.Equal(t, token.Eof, tok.Type)
 	})
 
-	t.Run("Equal", func (t *testing.T) {
+	t.Run("Equal", func(t *testing.T) {
 		l := New("!===")
 
 		tok := l.NextToken()
@@ -64,14 +64,14 @@ func TestNextToken(t *testing.T) {
 		assert.Equal(t, token.Equal, tok.Type)
 	})
 
-	t.Run("let", func (t *testing.T) {
+	t.Run("let", func(t *testing.T) {
 		l := New("let")
 
 		tok := l.NextToken()
 		assert.Equal(t, token.Let, tok.Type)
 	})
 
-	t.Run("Identifier", func (t *testing.T) {
+	t.Run("Identifier", func(t *testing.T) {
 		l := New("varCount")
 
 		tok := l.NextToken()
@@ -83,5 +83,35 @@ func TestNextToken(t *testing.T) {
 		tok = l.NextToken()
 		assert.Equal(t, token.Identifier, tok.Type)
 		assert.Equal(t, "varCount69", tok.Literal)
+	})
+
+	t.Run("Literal integer", func(t *testing.T) {
+		l := New("123")
+
+		tok := l.NextToken()
+		assert.Equal(t, token.Integer, tok.Type)
+		assert.Equal(t, "123", tok.Literal)
+	})
+
+	t.Run("Let statement", func(t *testing.T) {
+		l := New("let x = 5;")
+
+		tok := l.NextToken()
+		assert.Equal(t, token.Let, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.Identifier, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.Assign, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.Integer, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.Semicolon, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.Eof, tok.Type)
 	})
 }

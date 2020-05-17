@@ -3,9 +3,9 @@ package lexer
 import "github.com/varshard/monkeyinterpreter/token"
 
 type Lexer struct {
-	Position int
+	Position     int
 	ReadPosition int
-	Input string
+	Input        string
 }
 
 func New(input string) *Lexer {
@@ -28,11 +28,11 @@ func (l *Lexer) NextToken() token.Token {
 	if l.ReadPosition >= len(l.Input) {
 		return token.Token{
 			Position: l.ReadPosition,
-			Type: token.Eof,
+			Type:     token.Eof,
 		}
 	}
-	char := l.ReadChar()
 	l.skipWhiteSpaces()
+	char := l.ReadChar()
 
 	tok := token.Token{
 		Position: l.Position,
@@ -59,8 +59,11 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Type = token.Not
 		}
 	} else if IsAlphabet(char) {
-		tok =	l.readIdentifier()
+		tok = l.readIdentifier()
+		// Handle let, if, else, and etc.
 		tok.Type = tok.LookUpIdentifier(tok.Literal)
+	} else if IsNumeric(char) {
+		tok = l.readInteger()
 	} else {
 		tok.Literal = string(char)
 		tok.Type = token.Illegal
@@ -79,19 +82,23 @@ func (l *Lexer) peekChar() byte {
 
 func (l *Lexer) peekChars(n int) []byte {
 	chars := make([]byte, 0)
-	for i := 1; i < n && l.Position + i <= len(l.Input); i++ {
-		chars = append(chars, l.Input[l.Position + i])
+	for i := 1; i < n && l.Position+i <= len(l.Input); i++ {
+		chars = append(chars, l.Input[l.Position+i])
 	}
 
 	return chars
 }
 
 func IsAlphabet(char byte) bool {
-	return (char >= 65 && char <= 90) || (char >= 97 && char <= 122)
+	return (char >= 'A' && char <= 'Z') || (char >= 'a' && char <= 'z')
 }
 
 func IsAlphaNumeric(char byte) bool {
-	return IsAlphabet(char) || (char >= 48 && char <= 57)
+	return IsAlphabet(char) || IsNumeric(char)
+}
+
+func IsNumeric(char byte) bool {
+	return char >= '0' && char <= '9'
 }
 
 func (l *Lexer) readLet() token.Token {
@@ -100,8 +107,8 @@ func (l *Lexer) readLet() token.Token {
 
 	if string(chars) == "let" {
 		return token.Token{
-			Type: token.Let,
-			Literal: "let",
+			Type:     token.Let,
+			Literal:  "let",
 			Position: position,
 		}
 	}
@@ -111,7 +118,7 @@ func (l *Lexer) readLet() token.Token {
 
 func (l *Lexer) readIdentifier() token.Token {
 	position := l.Position
-	chars := []byte{ l.Input[l.Position] }
+	chars := []byte{l.Input[l.Position]}
 	for {
 		if !IsAlphaNumeric(l.peekChar()) {
 			break
@@ -120,15 +127,34 @@ func (l *Lexer) readIdentifier() token.Token {
 	}
 
 	return token.Token{
-		Type: token.Identifier,
-		Literal: string(chars),
+		Type:     token.Identifier,
+		Literal:  string(chars),
+		Position: position,
+	}
+}
+
+func (l *Lexer) readInteger() token.Token {
+	position := l.Position
+	chars := []byte{l.Input[position]}
+
+	for {
+		if !IsNumeric(l.peekChar()) {
+			break
+		}
+		chars = append(chars, l.ReadChar())
+	}
+
+	return token.Token{
+		Type:     token.Integer,
+		Literal:  string(chars),
 		Position: position,
 	}
 }
 
 func (l *Lexer) skipWhiteSpaces() {
 	for {
-		if 9 != l.peekChar() && 32 != l.peekChar() {
+		peekedChar := l.peekChar()
+		if 9 != peekedChar && 32 != peekedChar {
 			break
 		}
 		l.ReadChar()
