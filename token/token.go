@@ -45,7 +45,6 @@ var reserved = map[string]TokenType{
 
 var symbols = map[byte]TokenType{
 	'+': Plus,
-	'-': Minus,
 	'*': Multiply,
 	'/': Divide,
 	'{': Lbrace,

@@ -58,6 +58,12 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Literal = "!"
 			tok.Type = token.Bang
 		}
+	} else if char == '-' {
+		if IsNumeric(l.peekChar()) {
+			tok = l.readNumber()
+		} else {
+			tok.Type = token.Minus
+		}
 	} else if IsAlphabet(char) {
 		tok = l.readIdentifier()
 		// Handle let, if, else, and etc.

@@ -86,19 +86,39 @@ func TestNextToken(t *testing.T) {
 	})
 
 	t.Run("Literal integer", func(t *testing.T) {
-		l := New("123")
+		t.Run("Positive", func(t *testing.T) {
+			l := New("123")
 
-		tok := l.NextToken()
-		assert.Equal(t, token.Integer, tok.Type)
-		assert.Equal(t, "123", tok.Literal)
+			tok := l.NextToken()
+			assert.Equal(t, token.Integer, tok.Type)
+			assert.Equal(t, "123", tok.Literal)
+		})
+
+		t.Run("Negative", func(t *testing.T) {
+			l := New("-5")
+
+			tok := l.NextToken()
+			assert.Equal(t, token.Integer, tok.Type)
+			assert.Equal(t, "-5", tok.Literal)
+		})
 	})
 
 	t.Run("Literal floating", func(t *testing.T) {
-		l := New("0.27")
+		t.Run("Positive", func(t *testing.T) {
+			l := New("0.27")
 
-		tok := l.NextToken()
-		assert.Equal(t, token.Floating, tok.Type)
-		assert.Equal(t, "0.27", tok.Literal)
+			tok := l.NextToken()
+			assert.Equal(t, token.Floating, tok.Type)
+			assert.Equal(t, "0.27", tok.Literal)
+		})
+
+		t.Run("Negative", func(t *testing.T) {
+			l := New("-5.0")
+
+			tok := l.NextToken()
+			assert.Equal(t, token.Floating, tok.Type)
+			assert.Equal(t, "-5.0", tok.Literal)
+		})
 	})
 
 	t.Run("Let statement", func(t *testing.T) {
