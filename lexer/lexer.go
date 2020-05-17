@@ -56,14 +56,14 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Type = token.NotEqual
 		} else {
 			tok.Literal = "!"
-			tok.Type = token.Not
+			tok.Type = token.Bang
 		}
 	} else if IsAlphabet(char) {
 		tok = l.readIdentifier()
 		// Handle let, if, else, and etc.
 		tok.Type = tok.LookUpIdentifier(tok.Literal)
 	} else if IsNumeric(char) {
-		tok = l.readInteger()
+		tok = l.readNumber()
 	} else {
 		tok.Literal = string(char)
 		tok.Type = token.Illegal
@@ -133,19 +133,24 @@ func (l *Lexer) readIdentifier() token.Token {
 	}
 }
 
-func (l *Lexer) readInteger() token.Token {
+func (l *Lexer) readNumber() token.Token {
 	position := l.Position
-	chars := []byte{l.Input[position]}
-
+	chars := []byte{l.Input[l.Position]}
+	tokenType := token.Integer
 	for {
-		if !IsNumeric(l.peekChar()) {
+		peekedChar := l.peekChar()
+
+		if peekedChar == '.' {
+			tokenType = token.Floating
+		}
+		if !IsNumeric(peekedChar) && peekedChar != '.' {
 			break
 		}
 		chars = append(chars, l.ReadChar())
 	}
 
 	return token.Token{
-		Type:     token.Integer,
+		Type:     tokenType,
 		Literal:  string(chars),
 		Position: position,
 	}

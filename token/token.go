@@ -23,7 +23,7 @@ const (
 	Multiply TokenType = "*"
 	Divide   TokenType = "/"
 	Assign   TokenType = "="
-	Not      TokenType = "!"
+	Bang     TokenType = "!"
 
 	Let      TokenType = "let"
 	Function TokenType = "fn"
@@ -33,6 +33,7 @@ const (
 
 	Identifier TokenType = "identifier"
 	Integer    TokenType = "integer"
+	Floating   TokenType = "floating"
 )
 
 var reserved = map[string]TokenType{

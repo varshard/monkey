@@ -36,7 +36,7 @@ func TestNextToken(t *testing.T) {
 		assert.Equal(t, token.Semicolon, tok.Type)
 
 		tok = l.NextToken()
-		assert.Equal(t, token.Not, tok.Type)
+		assert.Equal(t, token.Bang, tok.Type)
 
 		tok = l.NextToken()
 		assert.Equal(t, token.Plus, tok.Type)
@@ -91,6 +91,14 @@ func TestNextToken(t *testing.T) {
 		tok := l.NextToken()
 		assert.Equal(t, token.Integer, tok.Type)
 		assert.Equal(t, "123", tok.Literal)
+	})
+
+	t.Run("Literal floating", func(t *testing.T) {
+		l := New("0.27")
+
+		tok := l.NextToken()
+		assert.Equal(t, token.Floating, tok.Type)
+		assert.Equal(t, "0.27", tok.Literal)
 	})
 
 	t.Run("Let statement", func(t *testing.T) {
