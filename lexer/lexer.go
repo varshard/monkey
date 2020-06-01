@@ -6,11 +6,14 @@ type Lexer struct {
 	Position     int
 	ReadPosition int
 	Input        string
+	Line         int
+	Col          int
 }
 
 func New(input string) *Lexer {
 	l := Lexer{
 		Input: input,
+		Line:  1,
 	}
 
 	return &l
@@ -18,9 +21,13 @@ func New(input string) *Lexer {
 
 func (l *Lexer) ReadChar() byte {
 	char := l.Input[l.ReadPosition]
+	if '\n' == char {
+		l.Line += 1
+		l.Col = 0
+	}
 	l.Position = l.ReadPosition
 	l.ReadPosition += 1
-
+	l.Col += 1
 	return char
 }
 
@@ -33,7 +40,6 @@ func (l *Lexer) NextToken() token.Token {
 	}
 	l.skipWhiteSpaces()
 	char := l.ReadChar()
-
 	tok := token.Token{
 		Position: l.Position,
 	}
@@ -75,6 +81,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok.Type = token.Illegal
 	}
 
+	tok.Line = l.Line
+	tok.Col = l.Col
 	return tok
 }
 
@@ -165,7 +173,7 @@ func (l *Lexer) readNumber() token.Token {
 func (l *Lexer) skipWhiteSpaces() {
 	for {
 		peekedChar := l.peekChar()
-		if 9 != peekedChar && 32 != peekedChar {
+		if ' ' != peekedChar && '\t' != peekedChar {
 			break
 		}
 		l.ReadChar()
