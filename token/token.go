@@ -26,6 +26,7 @@ const (
 	Bang     TokenType = "!"
 
 	Let      TokenType = "let"
+	Return   TokenType = "return"
 	Function TokenType = "fn"
 
 	If   TokenType = "if"
@@ -37,10 +38,11 @@ const (
 )
 
 var reserved = map[string]TokenType{
-	"fn":   Function,
-	"let":  Let,
-	"if":   If,
-	"else": Else,
+	"fn":     Function,
+	"let":    Let,
+	"if":     If,
+	"else":   Else,
+	"return": Return,
 }
 
 var symbols = map[byte]TokenType{

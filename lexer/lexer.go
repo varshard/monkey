@@ -8,6 +8,7 @@ type Lexer struct {
 	Input        string
 	Line         int
 	Col          int
+	EndCol       int
 }
 
 func New(input string) *Lexer {
@@ -80,6 +81,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok.Literal = string(char)
 		tok.Type = token.Illegal
 	}
+	// TODO: Read string
+	// TODO: Read float
 
 	tok.Line = l.Line
 	tok.Col = l.Col
