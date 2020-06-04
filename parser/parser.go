@@ -36,8 +36,9 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 		if statement != nil {
 			program.PushStatement(statement)
+			p.advanceToken()
 		}
-		p.advanceToken()
+		break
 	}
 
 	return program
@@ -59,48 +60,62 @@ func (p *Parser) readTokens() ast.Statement {
 	return statement
 }
 
-func (p *Parser) readSemicolon() {
+func (p *Parser) readSemicolon() bool {
 	// Every statement must be terminated with a ;
-	if p.nextTok.Type != token.Semicolon {
-		p.Errors = append(p.Errors, errors.New(fmt.Sprintf("missing a semicolon at %d:%d", p.currTok.Line, p.currTok.Col)))
+	if !p.peekToken(token.Semicolon) {
+		p.peekError(token.Semicolon)
+		return false
 	}
 	p.advanceToken()
+	return true
 }
 
-func (p *Parser) parseLet() ast.LetStatement {
+func (p *Parser) parseLet() *ast.LetStatement {
 	s := ast.LetStatement{
 		Token: p.currTok,
 	}
 
+	if !p.peekToken(token.Identifier) {
+		p.peekError(token.Identifier)
+		return nil
+	}
 	p.advanceToken()
 	if p.currTok.Type == token.Identifier {
 		s.Variable = p.currTok
-	} else {
-		p.Errors = append(p.Errors, errors.New(fmt.Sprintf("expected identifier at %d:%d", s.Token.Line, s.Token.Col)))
 	}
 
-	if p.nextTok.Type == token.Assign {
+	if p.peekToken(token.Assign) {
 		p.advanceToken()
-		if p.currTok.Type != token.Assign {
-			p.Errors = append(p.Errors, errors.New(fmt.Sprintf("expected = at %d:%d", s.Token.Line, s.Token.Col)))
-		}
-
 		p.advanceToken()
 		// TODO: read expression as Value
 	}
-	p.readSemicolon()
+	if !p.readSemicolon() {
+		return nil
+	}
 
-	return s
+	return &s
 }
 
-func (p *Parser) parseReturn() ast.ReturnStatement {
+func (p *Parser) parseReturn() *ast.ReturnStatement {
 	s := ast.ReturnStatement{
 		Token: p.currTok,
 	}
 
 	p.advanceToken()
 	// TODO: read expression as Value
-	p.readSemicolon()
+	if !p.readSemicolon() {
+		return nil
+	}
+	return &s
+}
 
-	return s
+func (p *Parser) peekToken(target token.TokenType) bool {
+	return p.nextTok.Type == target
+}
+
+func (p *Parser) peekError(target token.TokenType) {
+	nextTok := p.nextTok
+	if nextTok.Type != target {
+		p.Errors = append(p.Errors, errors.New(fmt.Sprintf("expected %s, but got %s at %d:%d", target, nextTok.Type, nextTok.Line, nextTok.Col)))
+	}
 }

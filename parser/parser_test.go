@@ -22,7 +22,7 @@ func TestParser(t *testing.T) {
 			program := p.ParseProgram()
 
 			assert.Equal(t, 1, len(program.Statements))
-			_, ok := program.Statements[0].(ast.LetStatement)
+			_, ok := program.Statements[0].(*ast.LetStatement)
 
 			assert.True(t, ok)
 		})
@@ -37,7 +37,7 @@ func TestParser(t *testing.T) {
 
 			assert.Equal(t, 2, len(program.Statements))
 			for _, s := range program.Statements {
-				_, ok := s.(ast.LetStatement)
+				_, ok := s.(*ast.LetStatement)
 				assert.True(t, ok)
 			}
 		})
@@ -50,7 +50,7 @@ func TestParser(t *testing.T) {
 			p.ParseProgram()
 
 			e := p.Errors[0]
-			assert.Equal(t, "expected identifier at 1:3", e.Error())
+			assert.Equal(t, "expected identifier, but got ; at 1:4", e.Error())
 		})
 
 		t.Run("Test let without semicolon", func(t *testing.T) {
@@ -60,7 +60,7 @@ func TestParser(t *testing.T) {
 			p.ParseProgram()
 
 			assert.Equal(t, 1, len(p.Errors))
-			assert.Equal(t, "missing a semicolon at 1:9", p.Errors[0].Error())
+			assert.Equal(t, "expected ;, but got Eof at 1:9", p.Errors[0].Error())
 		})
 
 		t.Run("Test let without =", func(t *testing.T) {
@@ -69,7 +69,7 @@ func TestParser(t *testing.T) {
 			p := New(statement)
 			program := p.ParseProgram()
 
-			_, ok := program.Statements[0].(ast.LetStatement)
+			_, ok := program.Statements[0].(*ast.LetStatement)
 
 			assert.True(t, ok)
 		})
@@ -84,7 +84,7 @@ func TestParser(t *testing.T) {
 			program := p.ParseProgram()
 
 			assert.Equal(t, 1, len(program.Statements))
-			_, ok := program.Statements[0].(ast.ReturnStatement)
+			_, ok := program.Statements[0].(*ast.ReturnStatement)
 
 			assert.True(t, ok)
 		})
