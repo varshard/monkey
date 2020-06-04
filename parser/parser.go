@@ -37,8 +37,9 @@ func (p *Parser) ParseProgram() *ast.Program {
 		if statement != nil {
 			program.PushStatement(statement)
 			p.advanceToken()
+		} else {
+			break
 		}
-		break
 	}
 
 	return program
@@ -81,7 +82,11 @@ func (p *Parser) parseLet() *ast.LetStatement {
 	}
 	p.advanceToken()
 	if p.currTok.Type == token.Identifier {
-		s.Variable = p.currTok
+		identifier := ast.Identifier{
+			Token: p.currTok,
+			Name:  p.currTok.Literal,
+		}
+		s.Variable = &identifier
 	}
 
 	if p.peekToken(token.Assign) {

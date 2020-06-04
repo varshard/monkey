@@ -10,3 +10,5 @@ type ReturnStatement struct {
 func (r ReturnStatement) TokenLiteral() string {
 	return r.Token.Literal
 }
+
+func (r ReturnStatement) statementNode() {}
