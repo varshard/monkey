@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/varshard/monkeyinterpreter/lexer"
+	"github.com/varshard/monkey/lexer"
 )
 
-func main()  {
+func main() {
 	lexer.New("")
 }

@@ -2,7 +2,7 @@ package parser
 
 import (
 	"github.com/stretchr/testify/assert"
-	"github.com/varshard/monkeyinterpreter/ast"
+	"github.com/varshard/monkey/ast"
 	"testing"
 )
 

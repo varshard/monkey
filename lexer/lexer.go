@@ -1,6 +1,6 @@
 package lexer
 
-import "github.com/varshard/monkeyinterpreter/token"
+import "github.com/varshard/monkey/token"
 
 type Lexer struct {
 	Position     int

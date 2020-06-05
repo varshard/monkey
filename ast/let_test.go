@@ -2,7 +2,7 @@ package ast
 
 import (
 	"github.com/stretchr/testify/assert"
-	"github.com/varshard/monkeyinterpreter/token"
+	"github.com/varshard/monkey/token"
 	"testing"
 )
 
@@ -18,9 +18,10 @@ func TestLet(t *testing.T) {
 			Literal: "x",
 		}
 
+		xIdent := Identifier{Name: x.Literal, Token: x}
 		let := LetStatement{
 			Token:    letTok,
-			Variable: x,
+			Variable: &xIdent,
 		}
 
 		assert.Equal(t, "let", let.TokenLiteral())

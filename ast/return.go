@@ -1,6 +1,6 @@
 package ast
 
-import "github.com/varshard/monkeyinterpreter/token"
+import "github.com/varshard/monkey/token"
 
 type ReturnStatement struct {
 	Token token.Token

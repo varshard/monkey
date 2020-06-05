@@ -3,9 +3,9 @@ package parser
 import (
 	"errors"
 	"fmt"
-	"github.com/varshard/monkeyinterpreter/ast"
-	"github.com/varshard/monkeyinterpreter/lexer"
-	"github.com/varshard/monkeyinterpreter/token"
+	"github.com/varshard/monkey/ast"
+	"github.com/varshard/monkey/lexer"
+	"github.com/varshard/monkey/token"
 )
 
 type Parser struct {
