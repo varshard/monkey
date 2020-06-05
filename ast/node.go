@@ -1,7 +1,10 @@
 package ast
 
+import "github.com/varshard/monkey/token"
+
 type Node interface {
 	TokenLiteral() string
+	String() string
 }
 
 type Statement interface {
@@ -34,4 +37,20 @@ func (p Program) TokenLiteral() string {
 
 func (p *Program) PushStatement(s Statement) {
 	p.Statements = append(p.Statements, s)
+}
+
+type ExpressionStatement struct {
+	Token      token.Token
+	Expression Expression
+}
+
+func (es *ExpressionStatement) statementNode() {}
+func (es *ExpressionStatement) TokenLiteral() string {
+	return es.Token.Literal
+}
+func (es *ExpressionStatement) String() string {
+	if es.Expression != nil {
+		return es.Expression.String()
+	}
+	return ""
 }

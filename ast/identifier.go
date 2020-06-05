@@ -9,8 +9,11 @@ type Identifier struct {
 	Name  string
 }
 
-func (i Identifier) TokenLiteral() string {
+func (i *Identifier) TokenLiteral() string {
 	return i.Token.Literal
 }
 
-func (i Identifier) expressionNode() {}
+func (i *Identifier) expressionNode() {}
+func (i *Identifier) String() string {
+	return i.Name
+}
