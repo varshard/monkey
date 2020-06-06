@@ -34,9 +34,7 @@ func New(code string) *Parser {
 	parser.prefixParseFns = map[token.TokenType]prefixParseFn{
 		token.Identifier: parser.parseIdentifier,
 		token.Integer:    parser.parseInteger,
-		//	"-": func() ast.Expression {
-		//
-		//	},
+		token.Minus:      parser.parseNegative,
 		//	"++": func() ast.Expression {
 		//
 		//	},
@@ -151,6 +149,17 @@ func (p *Parser) parseExpression() ast.Expression {
 
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.currTok, Name: p.currTok.Literal}
+}
+
+func (p *Parser) parseNegative() ast.Expression {
+	if p.peekToken(token.Integer) {
+		p.advanceToken()
+		integer := p.parseInteger().(*ast.IntegerLiteral)
+		integer.Value = -1 * integer.Value
+		return integer
+	}
+	// TODO: parse float
+	return nil
 }
 
 func (p *Parser) parseInteger() ast.Expression {

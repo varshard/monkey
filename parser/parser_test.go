@@ -43,9 +43,34 @@ func TestParser(t *testing.T) {
 			assert.True(t, ok)
 
 			assert.Equal(t, "10", let.Value.TokenLiteral())
+
+			integer, ok := let.Value.(*ast.IntegerLiteral)
+
+			assert.True(t, ok)
+			assert.Equal(t, 10, integer.Value)
 		})
 
 		t.Run("Test let integer", func(t *testing.T) {
+			statement := "let x = -5;"
+
+			p := New(statement)
+			assert.NotNil(t, p.lexer)
+
+			program := p.ParseProgram()
+
+			assert.Equal(t, 1, len(program.Statements))
+			let, ok := program.Statements[0].(*ast.LetStatement)
+
+			assert.True(t, ok)
+
+			integer, ok := let.Value.(*ast.IntegerLiteral)
+
+			assert.True(t, ok)
+			assert.Equal(t, -5, integer.Value)
+			assert.Equal(t, "-5", let.Value.TokenLiteral())
+		})
+
+		t.Run("Test let identifier", func(t *testing.T) {
 			statement := "let x = 10;let y = x;"
 
 			p := New(statement)
