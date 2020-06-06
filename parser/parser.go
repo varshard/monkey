@@ -122,8 +122,7 @@ func (p *Parser) readTokens() ast.Statement {
 }
 
 func (p *Parser) readSemicolon() bool {
-	if !p.peekToken(token.Semicolon) {
-		p.peekError(token.Semicolon)
+	if !p.expectToken(token.Semicolon) {
 		return false
 	}
 	p.advanceToken()
@@ -135,8 +134,7 @@ func (p *Parser) parseLet() *ast.LetStatement {
 		Token: p.currTok,
 	}
 
-	if !p.peekToken(token.Identifier) {
-		p.peekError(token.Identifier)
+	if !p.expectToken(token.Identifier) {
 		return nil
 	}
 	p.advanceToken()
@@ -226,8 +224,7 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	// skip (
 	p.advanceToken()
 	exp := p.parseExpression(LOWEST)
-	if !p.peekToken(token.Rparen) {
-		p.peekError(token.Rparen)
+	if !p.expectToken(token.Rparen) {
 		return nil
 	}
 
@@ -289,4 +286,12 @@ func (p *Parser) peekPrecedence() int {
 	}
 
 	return LOWEST
+}
+
+func (p *Parser) expectToken(target token.TokenType) bool {
+	if !p.peekToken(target) {
+		p.peekError(target)
+		return false
+	}
+	return true
 }
