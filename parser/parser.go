@@ -17,7 +17,6 @@ const (
 	SUM
 	PRODUCT
 	PREFIX
-	CALL
 )
 
 var precedences = map[token.TokenType]int{
@@ -37,6 +36,7 @@ var precedences = map[token.TokenType]int{
 type (
 	prefixParseFn func() ast.Expression
 	infixParseFn  func(expression ast.Expression) ast.Expression
+	suffixParseFn func(identifier *ast.Identifier) ast.Expression
 )
 
 type Parser struct {
@@ -47,6 +47,7 @@ type Parser struct {
 
 	prefixParseFns map[token.TokenType]prefixParseFn
 	infixParseFns  map[token.TokenType]infixParseFn
+	suffixParseFns map[token.TokenType]suffixParseFn
 }
 
 func New(code string) *Parser {
@@ -57,15 +58,14 @@ func New(code string) *Parser {
 
 	// default, -, ++, --
 	parser.prefixParseFns = map[token.TokenType]prefixParseFn{
-		token.Identifier: parser.parseIdentifier,
-		token.Integer:    parser.parseInteger,
-		token.Minus:      parser.parsePrefix,
-		token.True:       parser.parseBool,
-		token.False:      parser.parseBool,
-		token.Bang:       parser.parsePrefix,
-		token.Increment:  parser.parsePrefix,
-		token.Decrement:  parser.parsePrefix,
-		token.Lparen:     parser.parseGroupedExpression,
+		token.Integer:   parser.parseInteger,
+		token.Minus:     parser.parsePrefix,
+		token.True:      parser.parseBool,
+		token.False:     parser.parseBool,
+		token.Bang:      parser.parsePrefix,
+		token.Increment: parser.parsePrefix,
+		token.Decrement: parser.parsePrefix,
+		token.Lparen:    parser.parseGroupedExpression,
 	}
 
 	parser.infixParseFns = map[token.TokenType]infixParseFn{
@@ -79,6 +79,10 @@ func New(code string) *Parser {
 		token.LessThanEqual: parser.parseInfixExpression,
 	}
 
+	parser.suffixParseFns = map[token.TokenType]suffixParseFn{
+		token.Increment: parser.parseSuffix,
+		token.Decrement: parser.parseSuffix,
+	}
 	// advance twice to set curr and next
 	parser.advanceToken()
 	parser.advanceToken()
@@ -186,13 +190,25 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	currTok := p.currTok
-	prefix := p.prefixParseFns[currTok.Type]
-	if prefix == nil {
-		p.Errors = append(p.Errors, errors.New(fmt.Sprintf("expected expression, but found %s at %d:%d", currTok.Literal, currTok.Line, currTok.Col)))
-		return nil
-	}
-	leftExp := prefix()
 
+	var leftExp ast.Expression
+	if currTok.Type == token.Identifier {
+		identifier := p.parseIdentifier()
+		p.advanceToken()
+		suffix := p.suffixParseFns[p.currTok.Type]
+		if suffix != nil {
+			leftExp = suffix(identifier.(*ast.Identifier))
+		} else {
+			leftExp = identifier
+		}
+	} else {
+		prefix := p.prefixParseFns[currTok.Type]
+		if prefix == nil {
+			p.Errors = append(p.Errors, errors.New(fmt.Sprintf("expected expression, but found %s at %d:%d", currTok.Literal, currTok.Line, currTok.Col)))
+			return nil
+		}
+		leftExp = prefix()
+	}
 	// precedence > p.peekPrecedence is handled automatically when parseExpression is called the next time
 	for !p.peekToken(token.Semicolon) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.nextTok.Type]
@@ -267,6 +283,16 @@ func (p *Parser) parseBool() ast.Expression {
 		Token: p.currTok,
 		Value: boolean,
 	}
+}
+
+func (p *Parser) parseSuffix(identifier *ast.Identifier) ast.Expression {
+	suffix := ast.SuffixExpression{
+		Token:    p.currTok,
+		Left:     identifier,
+		Operator: p.currTok.Literal,
+	}
+
+	return &suffix
 }
 
 func (p *Parser) peekToken(target token.TokenType) bool {

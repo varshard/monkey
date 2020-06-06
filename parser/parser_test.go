@@ -226,31 +226,42 @@ func TestParser(t *testing.T) {
 
 	t.Run("Test parsing an expression", func(t *testing.T) {
 		t.Run("Test suffix", func(t *testing.T) {
-			p := New("x++;y--;")
-			program := p.ParseProgram()
+			inputs := []string{"x++;", "y--;"}
+			expected := []string{"(x++)", "(y--)"}
 
-			assert.Equal(t, 2, len(program.Statements))
-			assert.Equal(t, 0, len(p.Errors))
+			for i, input := range inputs {
+				p := New(input)
+				program := p.ParseProgram()
 
-			expression, ok := program.Statements[0].(*ast.ExpressionStatement)
-			assert.True(t, ok)
+				assert.Equal(t, 0, len(p.Errors))
 
-			suffix, ok := expression.Expression.(*ast.SuffixExpression)
-			assert.True(t, ok)
-			assert.Equal(t, "++", suffix.Operator)
-			assert.Equal(t, "x", suffix.Left.String())
-			assert.Equal(t, "(x++)", suffix.String())
+				expression, ok := program.Statements[0].(*ast.ExpressionStatement)
+				assert.True(t, ok)
 
-			expression, ok = program.Statements[0].(*ast.ExpressionStatement)
-			assert.True(t, ok)
-
-			suffix, ok = expression.Expression.(*ast.SuffixExpression)
-			assert.True(t, ok)
-			assert.Equal(t, "--", suffix.Operator)
-			assert.Equal(t, "y", suffix.Left.String())
-			assert.Equal(t, "(y--)", suffix.String())
+				suffix, ok := expression.Expression.(*ast.SuffixExpression)
+				assert.True(t, ok)
+				assert.Equal(t, expected[i], suffix.String())
+			}
 		})
 
+		t.Run("Test suffix with infix", func(t *testing.T) {
+			inputs := []string{"1 + x++;", "y-- + -2;"}
+			expected := []string{"(1 + (x++))", "((y--) + (-2))"}
+
+			for i, input := range inputs {
+				p := New(input)
+				program := p.ParseProgram()
+
+				assert.Equal(t, 0, len(p.Errors))
+
+				expression, ok := program.Statements[0].(*ast.ExpressionStatement)
+				assert.True(t, ok)
+
+				infix, ok := expression.Expression.(*ast.InfixExpression)
+				assert.True(t, ok)
+				assert.Equal(t, expected[i], infix.String())
+			}
+		})
 		t.Run("Test parsing an invalid expression", func(t *testing.T) {
 			p := New("*;")
 
