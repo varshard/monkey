@@ -150,7 +150,7 @@ func (p *Parser) parseLet() *ast.LetStatement {
 		// Skip =
 		p.advanceToken()
 		p.advanceToken()
-		s.Value = p.parseExpression()
+		s.Value = p.parseExpression(LOWEST)
 	}
 	if !p.readSemicolon() {
 		return nil
@@ -165,7 +165,7 @@ func (p *Parser) parseReturn() *ast.ReturnStatement {
 	}
 
 	p.advanceToken()
-	s.Value = p.parseExpression()
+	s.Value = p.parseExpression(LOWEST)
 	if !p.readSemicolon() {
 		return nil
 	}
@@ -175,7 +175,7 @@ func (p *Parser) parseReturn() *ast.ReturnStatement {
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	s := ast.ExpressionStatement{
 		Token:      p.currTok,
-		Expression: p.parseExpression(),
+		Expression: p.parseExpression(LOWEST),
 	}
 
 	if !p.readSemicolon() {
@@ -184,19 +184,23 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	return &s
 }
 
-func (p *Parser) parseExpression() ast.Expression {
-	prefix := p.prefixParseFns[p.currTok.Type]
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+	currTok := p.currTok
+	prefix := p.prefixParseFns[currTok.Type]
 	if prefix == nil {
+		p.Errors = append(p.Errors, errors.New(fmt.Sprintf("expected expression, but found %s at %d:%d", currTok.Literal, currTok.Line, currTok.Col)))
 		return nil
 	}
 	leftExp := prefix()
 
-	infix := p.infixParseFns[p.nextTok.Type]
-	if infix != nil {
+	// precedence > p.peekPrecedence is handled automatically when parseExpression is called next time
+	for !p.peekToken(token.Semicolon) && precedence < p.peekPrecedence() {
+		infix := p.infixParseFns[p.nextTok.Type]
+		if infix == nil {
+			return leftExp
+		}
 		p.advanceToken()
-		infixExpression := infix(leftExp)
-
-		return infixExpression
+		leftExp = infix(leftExp)
 	}
 
 	return leftExp
@@ -209,8 +213,9 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 		Left:     left,
 	}
 
+	precedence := precedences[p.currTok.Type]
 	p.advanceToken()
-	infix.Right = p.parseExpression()
+	infix.Right = p.parseExpression(precedence)
 
 	return &infix
 }
@@ -225,7 +230,7 @@ func (p *Parser) parsePrefix() ast.Expression {
 		Operator: p.currTok.Literal,
 	}
 	p.advanceToken()
-	prefix.Right = p.parseExpression()
+	prefix.Right = p.parseExpression(LOWEST)
 	return prefix
 }
 
@@ -260,4 +265,12 @@ func (p *Parser) peekError(target token.TokenType) {
 	if nextTok.Type != target {
 		p.Errors = append(p.Errors, errors.New(fmt.Sprintf("expected %s, but got %s at %d:%d", target, nextTok.Type, nextTok.Line, nextTok.Col)))
 	}
+}
+
+func (p *Parser) peekPrecedence() int {
+	if p, ok := precedences[p.nextTok.Type]; ok {
+		return p
+	}
+
+	return LOWEST
 }

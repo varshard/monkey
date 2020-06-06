@@ -251,6 +251,24 @@ func TestParser(t *testing.T) {
 			assert.Equal(t, "(y--)", suffix.String())
 		})
 
+		t.Run("Test parsing an invalid expression", func(t *testing.T) {
+			p := New("*;")
+
+			p.ParseProgram()
+
+			assert.Equal(t, 1, len(p.Errors))
+
+			assert.Equal(t, "expected expression, but found * at 1:1", p.Errors[0].Error())
+		})
+
+		t.Run("Test parsing an invalid expression", func(t *testing.T) {
+			p := New("1-;")
+
+			p.ParseProgram()
+
+			assert.Equal(t, "expected expression, but found ; at 1:3", p.Errors[0].Error())
+		})
+
 		t.Run("Test parsing infix", func(t *testing.T) {
 			p := New("1 + 2;2 - 3; x * 2; 3 * y; 3/7;")
 			program := p.ParseProgram()
@@ -268,6 +286,36 @@ func TestParser(t *testing.T) {
 				assert.True(t, ok)
 				assert.Equal(t, checkers[i], infix.String())
 			}
+		})
+
+		t.Run("Test parsing 2 - 3 * 4", func(t *testing.T) {
+			p := New("2 - 3 * 4;")
+			program := p.ParseProgram()
+
+			es, ok := program.Statements[0].(*ast.ExpressionStatement)
+			assert.True(t, ok)
+
+			infix, ok := es.Expression.(*ast.InfixExpression)
+			assert.True(t, ok)
+
+			assert.Equal(t, "2", infix.Left.String())
+			assert.Equal(t, "(3 * 4)", infix.Right.String())
+			assert.Equal(t, "(2 - (3 * 4))", infix.String())
+		})
+
+		t.Run("Test parsing 2 / 3 + 4", func(t *testing.T) {
+			p := New("2 / 3 + 4;")
+			program := p.ParseProgram()
+
+			es, ok := program.Statements[0].(*ast.ExpressionStatement)
+			assert.True(t, ok)
+
+			infix, ok := es.Expression.(*ast.InfixExpression)
+			assert.True(t, ok)
+
+			assert.Equal(t, "(2 / 3)", infix.Left.String())
+			assert.Equal(t, "4", infix.Right.String())
+			assert.Equal(t, "((2 / 3) + 4)", infix.String())
 		})
 	})
 }
