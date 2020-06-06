@@ -190,4 +190,24 @@ func TestNextToken(t *testing.T) {
 		tok = l.NextToken()
 		assert.Equal(t, token.True, tok.Type)
 	})
+
+	t.Run("Test increment", func(j *testing.T) {
+		l := New("++x")
+
+		tok := l.NextToken()
+		assert.Equal(t, token.Increment, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.Identifier, tok.Type)
+	})
+
+	t.Run("Test decrement", func(j *testing.T) {
+		l := New("--x")
+
+		tok := l.NextToken()
+		assert.Equal(t, token.Decrement, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.Identifier, tok.Type)
+	})
 }

@@ -37,6 +37,8 @@ func (l *Lexer) NextToken() token.Token {
 		return token.Token{
 			Position: l.ReadPosition,
 			Type:     token.Eof,
+			Line:     l.Line,
+			Col:      l.Col,
 		}
 	}
 	l.skipWhiteSpaces()
@@ -65,9 +67,24 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Literal = "!"
 			tok.Type = token.Bang
 		}
+	} else if char == '+' {
+		if l.peekChar() == '+' {
+			l.ReadChar()
+			tok.Literal = "++"
+			tok.Type = token.Increment
+		} else {
+			tok.Literal = "+"
+			tok.Type = token.Plus
+		}
 	} else if char == '-' {
-		tok.Literal = "-"
-		tok.Type = token.Minus
+		if l.peekChar() == '-' {
+			l.ReadChar()
+			tok.Literal = "--"
+			tok.Type = token.Decrement
+		} else {
+			tok.Literal = "-"
+			tok.Type = token.Minus
+		}
 	} else if IsAlphabet(char) {
 		tok = l.readIdentifier()
 		// Handle let, if, else, and etc.

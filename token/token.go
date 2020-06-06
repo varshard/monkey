@@ -38,6 +38,9 @@ const (
 
 	True  TokenType = "true"
 	False TokenType = "false"
+
+	Increment TokenType = "++"
+	Decrement TokenType = "--"
 )
 
 var reserved = map[string]TokenType{
@@ -51,7 +54,6 @@ var reserved = map[string]TokenType{
 }
 
 var symbols = map[byte]TokenType{
-	'+': Plus,
 	'*': Multiply,
 	'/': Divide,
 	'{': Lbrace,
