@@ -11,13 +11,13 @@ type LetStatement struct {
 	Value    Expression
 }
 
-func (s *LetStatement) TokenLiteral() string {
+func (s LetStatement) TokenLiteral() string {
 	return s.Token.Literal
 }
 
 func (s *LetStatement) statementNode() {}
 
-func (s *LetStatement) String() string {
+func (s LetStatement) String() string {
 	var out bytes.Buffer
 	out.WriteString(s.TokenLiteral() + " ")
 	out.WriteString(s.Variable.String())

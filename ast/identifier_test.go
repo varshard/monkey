@@ -19,5 +19,6 @@ func TestIdentifier(t *testing.T) {
 		}
 
 		assert.Equal(t, "x", identifier.String())
+		assert.Equal(t, "x", identifier.TokenLiteral())
 	})
 }

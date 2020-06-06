@@ -10,13 +10,13 @@ type ReturnStatement struct {
 	Value Expression
 }
 
-func (r *ReturnStatement) TokenLiteral() string {
+func (r ReturnStatement) TokenLiteral() string {
 	return r.Token.Literal
 }
 
 func (r *ReturnStatement) statementNode() {}
 
-func (r *ReturnStatement) String() string {
+func (r ReturnStatement) String() string {
 	var out bytes.Buffer
 
 	out.WriteString(r.TokenLiteral())
