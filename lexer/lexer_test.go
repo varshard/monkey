@@ -54,14 +54,26 @@ func TestNextToken(t *testing.T) {
 		assert.Equal(t, token.Eof, tok.Type)
 	})
 
-	t.Run("Equal", func(t *testing.T) {
-		l := New("!===")
+	t.Run("Equality", func(t *testing.T) {
+		l := New("!===>=<=><")
 
 		tok := l.NextToken()
 		assert.Equal(t, token.NotEqual, tok.Type)
 
 		tok = l.NextToken()
 		assert.Equal(t, token.Equal, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.MoreThanEqual, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.LessThanEqual, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.MoreThan, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.LessThan, tok.Type)
 	})
 
 	t.Run("let", func(t *testing.T) {

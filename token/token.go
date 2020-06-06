@@ -14,8 +14,12 @@ const (
 	Comma     TokenType = ","
 	Period    TokenType = "."
 
-	Equal    TokenType = "=="
-	NotEqual TokenType = "!="
+	Equal         TokenType = "=="
+	NotEqual      TokenType = "!="
+	LessThan      TokenType = "<"
+	LessThanEqual TokenType = "<="
+	MoreThan      TokenType = ">"
+	MoreThanEqual TokenType = ">="
 
 	// Operators
 	Plus     TokenType = "+"

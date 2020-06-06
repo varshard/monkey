@@ -52,6 +52,7 @@ func (l *Lexer) NextToken() token.Token {
 		tok.Type = tokType
 	} else if char == '=' {
 		if l.peekChar() == '=' {
+			l.ReadChar()
 			tok.Literal = "=="
 			tok.Type = token.Equal
 		} else {
@@ -66,6 +67,24 @@ func (l *Lexer) NextToken() token.Token {
 		} else {
 			tok.Literal = "!"
 			tok.Type = token.Bang
+		}
+	} else if char == '>' {
+		if l.peekChar() == '=' {
+			l.ReadChar()
+			tok.Literal = ">="
+			tok.Type = token.MoreThanEqual
+		} else {
+			tok.Literal = ">"
+			tok.Type = token.MoreThan
+		}
+	} else if char == '<' {
+		if l.peekChar() == '=' {
+			l.ReadChar()
+			tok.Literal = "<="
+			tok.Type = token.LessThanEqual
+		} else {
+			tok.Literal = "<"
+			tok.Type = token.LessThan
 		}
 	} else if char == '+' {
 		if l.peekChar() == '+' {
