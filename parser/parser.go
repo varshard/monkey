@@ -6,6 +6,12 @@ import (
 	"github.com/varshard/monkey/ast"
 	"github.com/varshard/monkey/lexer"
 	"github.com/varshard/monkey/token"
+	"strconv"
+)
+
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn  func(expression ast.Expression) ast.Expression
 )
 
 type Parser struct {
@@ -13,6 +19,9 @@ type Parser struct {
 	currTok token.Token
 	nextTok token.Token
 	Errors  []error
+
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFn   map[token.TokenType]infixParseFn
 }
 
 func New(code string) *Parser {
@@ -21,6 +30,20 @@ func New(code string) *Parser {
 		Errors: make([]error, 0),
 	}
 
+	// default, -, ++, --
+	parser.prefixParseFns = map[token.TokenType]prefixParseFn{
+		token.Identifier: parser.parseIdentifier,
+		token.Integer:    parser.parseInteger,
+		//	"-": func() ast.Expression {
+		//
+		//	},
+		//	"++": func() ast.Expression {
+		//
+		//	},
+		//	"--": func() ast.Expression {
+		//
+		//	},
+	}
 	// advance twice to set curr and next
 	parser.advanceToken()
 	parser.advanceToken()
@@ -56,13 +79,14 @@ func (p *Parser) readTokens() ast.Statement {
 		statement = p.parseLet()
 	} else if p.currTok.Type == token.Return {
 		statement = p.parseReturn()
+	} else {
+		statement = p.parseExpressionStatement()
 	}
 
 	return statement
 }
 
 func (p *Parser) readSemicolon() bool {
-	// Every statement must be terminated with a ;
 	if !p.peekToken(token.Semicolon) {
 		p.peekError(token.Semicolon)
 		return false
@@ -90,9 +114,10 @@ func (p *Parser) parseLet() *ast.LetStatement {
 	}
 
 	if p.peekToken(token.Assign) {
+		// Skip =
 		p.advanceToken()
 		p.advanceToken()
-		// TODO: read expression as Value
+		s.Value = p.parseExpression()
 	}
 	if !p.readSemicolon() {
 		return nil
@@ -107,10 +132,41 @@ func (p *Parser) parseReturn() *ast.ReturnStatement {
 	}
 
 	p.advanceToken()
-	// TODO: read expression as Value
+	s.Value = p.parseExpression()
 	if !p.readSemicolon() {
 		return nil
 	}
+	return &s
+}
+
+func (p *Parser) parseExpression() ast.Expression {
+	prefix := p.prefixParseFns[p.currTok.Type]
+	if prefix == nil {
+		return nil
+	}
+	leftExp := prefix()
+
+	return leftExp
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{Token: p.currTok, Name: p.currTok.Literal}
+}
+
+func (p *Parser) parseInteger() ast.Expression {
+	value, err := strconv.Atoi(p.currTok.Literal)
+	if err != nil {
+		p.Errors = append(p.Errors, err)
+	}
+	return &ast.IntegerLiteral{Token: p.currTok, Value: value}
+}
+
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	s := ast.ExpressionStatement{
+		Token:      p.currTok,
+		Expression: p.parseExpression(),
+	}
+
 	return &s
 }
 

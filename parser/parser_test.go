@@ -22,13 +22,31 @@ func TestParser(t *testing.T) {
 			program := p.ParseProgram()
 
 			assert.Equal(t, 1, len(program.Statements))
-			_, ok := program.Statements[0].(*ast.LetStatement)
+			let, ok := program.Statements[0].(*ast.LetStatement)
 
 			assert.True(t, ok)
+
+			assert.Equal(t, "10", let.Value.TokenLiteral())
 		})
 
 		t.Run("Test let integer", func(t *testing.T) {
-			statement := "let x = 10;let y = 11;"
+			statement := "let x = 10;"
+
+			p := New(statement)
+			assert.NotNil(t, p.lexer)
+
+			program := p.ParseProgram()
+
+			assert.Equal(t, 1, len(program.Statements))
+			let, ok := program.Statements[0].(*ast.LetStatement)
+
+			assert.True(t, ok)
+
+			assert.Equal(t, "10", let.Value.TokenLiteral())
+		})
+
+		t.Run("Test let integer", func(t *testing.T) {
+			statement := "let x = 10;let y = x;"
 
 			p := New(statement)
 			assert.NotNil(t, p.lexer)
@@ -40,6 +58,12 @@ func TestParser(t *testing.T) {
 				_, ok := s.(*ast.LetStatement)
 				assert.True(t, ok)
 			}
+
+			let, ok := program.Statements[1].(*ast.LetStatement)
+
+			assert.True(t, ok)
+			assert.Equal(t, "y", let.Variable.TokenLiteral())
+			assert.Equal(t, "x", let.Value.TokenLiteral())
 		})
 
 		t.Run("Test error invalid let", func(t *testing.T) {
@@ -84,9 +108,10 @@ func TestParser(t *testing.T) {
 			program := p.ParseProgram()
 
 			assert.Equal(t, 1, len(program.Statements))
-			_, ok := program.Statements[0].(*ast.ReturnStatement)
+			ret, ok := program.Statements[0].(*ast.ReturnStatement)
 
 			assert.True(t, ok)
+			assert.Equal(t, "3", ret.Value.TokenLiteral())
 		})
 	})
 }
