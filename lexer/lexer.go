@@ -50,6 +50,7 @@ func (l *Lexer) NextToken() token.Token {
 	tokType, ok := tok.LookUpSymbol(char)
 	if ok {
 		tok.Type = tokType
+		tok.Literal = string(char)
 	} else if char == '=' {
 		if l.peekChar() == '=' {
 			l.ReadChar()

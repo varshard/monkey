@@ -9,6 +9,30 @@ import (
 	"strconv"
 )
 
+const (
+	_ int = iota
+	LOWEST
+	EQUALS
+	LESSGREATER
+	SUM
+	PRODUCT
+	PREFIX
+	CALL
+)
+
+var precedences = map[token.TokenType]int{
+	token.Equal:         EQUALS,
+	token.NotEqual:      EQUALS,
+	token.LessThan:      LESSGREATER,
+	token.LessThanEqual: LESSGREATER,
+	token.MoreThan:      LESSGREATER,
+	token.MoreThanEqual: LESSGREATER,
+	token.Plus:          SUM,
+	token.Minus:         SUM,
+	token.Multiply:      PRODUCT,
+	token.Divide:        PRODUCT,
+}
+
 type (
 	prefixParseFn func() ast.Expression
 	infixParseFn  func(expression ast.Expression) ast.Expression
@@ -21,7 +45,7 @@ type Parser struct {
 	Errors  []error
 
 	prefixParseFns map[token.TokenType]prefixParseFn
-	infixParseFn   map[token.TokenType]infixParseFn
+	infixParseFns  map[token.TokenType]infixParseFn
 }
 
 func New(code string) *Parser {
@@ -34,14 +58,25 @@ func New(code string) *Parser {
 	parser.prefixParseFns = map[token.TokenType]prefixParseFn{
 		token.Identifier: parser.parseIdentifier,
 		token.Integer:    parser.parseInteger,
-		token.Minus:      parser.parseNegative,
-		//	"++": func() ast.Expression {
-		//
-		//	},
-		//	"--": func() ast.Expression {
-		//
-		//	},
+		token.Minus:      parser.parsePrefix,
+		token.True:       parser.parseBool,
+		token.False:      parser.parseBool,
+		token.Bang:       parser.parsePrefix,
+		token.Increment:  parser.parsePrefix,
+		token.Decrement:  parser.parsePrefix,
 	}
+
+	parser.infixParseFns = map[token.TokenType]infixParseFn{
+		token.Plus:          parser.parseInfixExpression,
+		token.Minus:         parser.parseInfixExpression,
+		token.Multiply:      parser.parseInfixExpression,
+		token.Divide:        parser.parseInfixExpression,
+		token.MoreThan:      parser.parseInfixExpression,
+		token.MoreThanEqual: parser.parseInfixExpression,
+		token.LessThan:      parser.parseInfixExpression,
+		token.LessThanEqual: parser.parseInfixExpression,
+	}
+
 	// advance twice to set curr and next
 	parser.advanceToken()
 	parser.advanceToken()
@@ -137,6 +172,18 @@ func (p *Parser) parseReturn() *ast.ReturnStatement {
 	return &s
 }
 
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	s := ast.ExpressionStatement{
+		Token:      p.currTok,
+		Expression: p.parseExpression(),
+	}
+
+	if !p.readSemicolon() {
+		return nil
+	}
+	return &s
+}
+
 func (p *Parser) parseExpression() ast.Expression {
 	prefix := p.prefixParseFns[p.currTok.Type]
 	if prefix == nil {
@@ -144,22 +191,42 @@ func (p *Parser) parseExpression() ast.Expression {
 	}
 	leftExp := prefix()
 
+	infix := p.infixParseFns[p.nextTok.Type]
+	if infix != nil {
+		p.advanceToken()
+		infixExpression := infix(leftExp)
+
+		return infixExpression
+	}
+
 	return leftExp
+}
+
+func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	infix := ast.InfixExpression{
+		Operator: p.currTok.Literal,
+		Token:    p.currTok,
+		Left:     left,
+	}
+
+	p.advanceToken()
+	infix.Right = p.parseExpression()
+
+	return &infix
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.currTok, Name: p.currTok.Literal}
 }
 
-func (p *Parser) parseNegative() ast.Expression {
-	if p.peekToken(token.Integer) {
-		p.advanceToken()
-		integer := p.parseInteger().(*ast.IntegerLiteral)
-		integer.Value = -1 * integer.Value
-		return integer
+func (p *Parser) parsePrefix() ast.Expression {
+	prefix := &ast.PrefixExpression{
+		Token:    p.currTok,
+		Operator: p.currTok.Literal,
 	}
-	// TODO: parse float
-	return nil
+	p.advanceToken()
+	prefix.Right = p.parseExpression()
+	return prefix
 }
 
 func (p *Parser) parseInteger() ast.Expression {
@@ -170,13 +237,18 @@ func (p *Parser) parseInteger() ast.Expression {
 	return &ast.IntegerLiteral{Token: p.currTok, Value: value}
 }
 
-func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	s := ast.ExpressionStatement{
-		Token:      p.currTok,
-		Expression: p.parseExpression(),
+func (p *Parser) parseBool() ast.Expression {
+	boolean, err := strconv.ParseBool(p.currTok.Literal)
+
+	if err != nil {
+		p.Errors = append(p.Errors, err)
+		return nil
 	}
 
-	return &s
+	return &ast.Boolean{
+		Token: p.currTok,
+		Value: boolean,
+	}
 }
 
 func (p *Parser) peekToken(target token.TokenType) bool {
