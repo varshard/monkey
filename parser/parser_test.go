@@ -343,7 +343,7 @@ func TestParser(t *testing.T) {
 			es, ok := program.Statements[0].(*ast.ExpressionStatement)
 			assert.True(t, ok)
 
-			integer, ok := es.Expression.(*ast.InfixExpression)
+			integer, ok := es.Expression.(*ast.IntegerLiteral)
 			assert.True(t, ok)
 
 			assert.Equal(t, "2", integer.String())
