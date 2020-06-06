@@ -66,11 +66,8 @@ func (l *Lexer) NextToken() token.Token {
 			tok.Type = token.Bang
 		}
 	} else if char == '-' {
-		if IsNumeric(l.peekChar()) {
-			tok = l.readNumber()
-		} else {
-			tok.Type = token.Minus
-		}
+		tok.Literal = "-"
+		tok.Type = token.Minus
 	} else if IsAlphabet(char) {
 		tok = l.readIdentifier()
 		// Handle let, if, else, and etc.
@@ -82,7 +79,6 @@ func (l *Lexer) NextToken() token.Token {
 		tok.Type = token.Illegal
 	}
 	// TODO: Read string
-	// TODO: Read float
 
 	tok.Line = l.Line
 	tok.Col = l.Col

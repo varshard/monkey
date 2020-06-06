@@ -98,8 +98,12 @@ func TestNextToken(t *testing.T) {
 			l := New("-5")
 
 			tok := l.NextToken()
+			assert.Equal(t, token.Minus, tok.Type)
+			assert.Equal(t, "-", tok.Literal)
+
+			tok = l.NextToken()
 			assert.Equal(t, token.Integer, tok.Type)
-			assert.Equal(t, "-5", tok.Literal)
+			assert.Equal(t, "5", tok.Literal)
 		})
 	})
 
@@ -116,8 +120,10 @@ func TestNextToken(t *testing.T) {
 			l := New("-5.0")
 
 			tok := l.NextToken()
+			assert.Equal(t, token.Minus, tok.Type)
+
+			tok = l.NextToken()
 			assert.Equal(t, token.Floating, tok.Type)
-			assert.Equal(t, "-5.0", tok.Literal)
 		})
 	})
 
@@ -141,5 +147,47 @@ func TestNextToken(t *testing.T) {
 
 		tok = l.NextToken()
 		assert.Equal(t, token.Eof, tok.Type)
+	})
+
+	t.Run("Test return true", func(j *testing.T) {
+		l := New("return true;")
+
+		tok := l.NextToken()
+		assert.Equal(t, token.Return, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.True, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.Semicolon, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.Eof, tok.Type)
+	})
+
+	t.Run("Test return false", func(j *testing.T) {
+		l := New("return false;")
+
+		tok := l.NextToken()
+		assert.Equal(t, token.Return, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.False, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.Semicolon, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.Eof, tok.Type)
+	})
+
+	t.Run("Test return not true", func(j *testing.T) {
+		l := New("!true")
+
+		tok := l.NextToken()
+		assert.Equal(t, token.Bang, tok.Type)
+
+		tok = l.NextToken()
+		assert.Equal(t, token.True, tok.Type)
 	})
 }

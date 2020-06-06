@@ -35,6 +35,9 @@ const (
 	Identifier TokenType = "identifier"
 	Integer    TokenType = "integer"
 	Floating   TokenType = "floating"
+
+	True  TokenType = "true"
+	False TokenType = "false"
 )
 
 var reserved = map[string]TokenType{
@@ -43,6 +46,8 @@ var reserved = map[string]TokenType{
 	"if":     If,
 	"else":   Else,
 	"return": Return,
+	"true":   True,
+	"false":  False,
 }
 
 var symbols = map[byte]TokenType{
