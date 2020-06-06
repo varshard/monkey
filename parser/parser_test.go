@@ -288,34 +288,65 @@ func TestParser(t *testing.T) {
 			}
 		})
 
-		t.Run("Test parsing 2 - 3 * 4", func(t *testing.T) {
-			p := New("2 - 3 * 4;")
-			program := p.ParseProgram()
+		t.Run("Test parsing precedence", func(t *testing.T) {
+			inputs := []string{
+				"2 - 3 * 4;",
+				"2 / 3 + 4;",
+			}
+			expected := []string{
+				"(2 - (3 * 4))",
+				"((2 / 3) + 4)",
+			}
+			for i, input := range inputs {
+				p := New(input)
+				program := p.ParseProgram()
 
-			es, ok := program.Statements[0].(*ast.ExpressionStatement)
-			assert.True(t, ok)
+				es, ok := program.Statements[0].(*ast.ExpressionStatement)
+				assert.True(t, ok)
 
-			infix, ok := es.Expression.(*ast.InfixExpression)
-			assert.True(t, ok)
+				infix, ok := es.Expression.(*ast.InfixExpression)
+				assert.True(t, ok)
 
-			assert.Equal(t, "2", infix.Left.String())
-			assert.Equal(t, "(3 * 4)", infix.Right.String())
-			assert.Equal(t, "(2 - (3 * 4))", infix.String())
+				assert.Equal(t, expected[i], infix.String())
+			}
 		})
 
-		t.Run("Test parsing 2 / 3 + 4", func(t *testing.T) {
-			p := New("2 / 3 + 4;")
+		t.Run("Test parsing grouped expressions", func(t *testing.T) {
+			inputs := []string{
+				"(2 - 3) * 4;",
+				"2 / (3 + 4);",
+				"(2 + 3) + 4;",
+				"(2 + 3 - 4);",
+			}
+			expected := []string{
+				"((2 - 3) * 4)",
+				"(2 / (3 + 4))",
+				"((2 + 3) + 4)",
+				"((2 + 3) - 4)",
+			}
+			for i, input := range inputs {
+				p := New(input)
+				program := p.ParseProgram()
+
+				es, ok := program.Statements[0].(*ast.ExpressionStatement)
+				assert.True(t, ok)
+
+				infix, ok := es.Expression.(*ast.InfixExpression)
+				assert.True(t, ok)
+
+				assert.Equal(t, expected[i], infix.String())
+			}
+
+			p := New("(2);")
 			program := p.ParseProgram()
 
 			es, ok := program.Statements[0].(*ast.ExpressionStatement)
 			assert.True(t, ok)
 
-			infix, ok := es.Expression.(*ast.InfixExpression)
+			integer, ok := es.Expression.(*ast.InfixExpression)
 			assert.True(t, ok)
 
-			assert.Equal(t, "(2 / 3)", infix.Left.String())
-			assert.Equal(t, "4", infix.Right.String())
-			assert.Equal(t, "((2 / 3) + 4)", infix.String())
+			assert.Equal(t, "2", integer.String())
 		})
 	})
 }

@@ -31,6 +31,7 @@ var precedences = map[token.TokenType]int{
 	token.Minus:         SUM,
 	token.Multiply:      PRODUCT,
 	token.Divide:        PRODUCT,
+	token.Lparen:        PREFIX,
 }
 
 type (
@@ -64,6 +65,7 @@ func New(code string) *Parser {
 		token.Bang:       parser.parsePrefix,
 		token.Increment:  parser.parsePrefix,
 		token.Decrement:  parser.parsePrefix,
+		token.Lparen:     parser.parseGroupedExpression,
 	}
 
 	parser.infixParseFns = map[token.TokenType]infixParseFn{
@@ -193,7 +195,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	leftExp := prefix()
 
-	// precedence > p.peekPrecedence is handled automatically when parseExpression is called next time
+	// precedence > p.peekPrecedence is handled automatically when parseExpression is called the next time
 	for !p.peekToken(token.Semicolon) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.nextTok.Type]
 		if infix == nil {
@@ -218,6 +220,20 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	infix.Right = p.parseExpression(precedence)
 
 	return &infix
+}
+
+func (p *Parser) parseGroupedExpression() ast.Expression {
+	// skip (
+	p.advanceToken()
+	exp := p.parseExpression(LOWEST)
+	if !p.peekToken(token.Rparen) {
+		p.peekError(token.Rparen)
+		return nil
+	}
+
+	// skip )
+	p.advanceToken()
+	return exp
 }
 
 func (p *Parser) parseIdentifier() ast.Expression {
