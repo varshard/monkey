@@ -191,7 +191,7 @@ func (l *Lexer) readNumber() token.Token {
 		peekedChar := l.peekChar()
 
 		if peekedChar == '.' {
-			tokenType = token.Floating
+			tokenType = token.Decimal
 		}
 		if !IsNumeric(peekedChar) && peekedChar != '.' {
 			break

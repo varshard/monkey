@@ -200,7 +200,11 @@ func TestParser(t *testing.T) {
 
 				expression, ok := program.Statements[0].(*ast.ExpressionStatement)
 				assert.True(t, ok)
-				assert.Equal(t, test.expected, expression.String())
+
+				suffix, ok := expression.Expression.(*ast.SuffixExpression)
+
+				assert.True(t, ok)
+				assert.Equal(t, test.expected, suffix.String())
 			}
 		})
 
@@ -222,9 +226,14 @@ func TestParser(t *testing.T) {
 
 				expression, ok := program.Statements[0].(*ast.ExpressionStatement)
 				assert.True(t, ok)
-				assert.Equal(t, test.expected, expression.String())
+
+				suffix, ok := expression.Expression.(*ast.InfixExpression)
+
+				assert.True(t, ok)
+				assert.Equal(t, test.expected, suffix.String())
 			}
 		})
+
 		t.Run("Test parsing an invalid expression", func(t *testing.T) {
 			p := New("*;")
 
@@ -322,7 +331,10 @@ func TestParser(t *testing.T) {
 			tests := []testInput{
 				{
 					input:    "(2);",
-					expected: "2",
+					expected: "2;",
+				}, {
+					input:    "(2.0);",
+					expected: "2.0;",
 				},
 			}
 

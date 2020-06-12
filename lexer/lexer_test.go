@@ -124,7 +124,7 @@ func TestNextToken(t *testing.T) {
 			l := New("0.27")
 
 			tok := l.NextToken()
-			assert.Equal(t, token.Floating, tok.Type)
+			assert.Equal(t, token.Decimal, tok.Type)
 			assert.Equal(t, "0.27", tok.Literal)
 		})
 
@@ -135,7 +135,7 @@ func TestNextToken(t *testing.T) {
 			assert.Equal(t, token.Minus, tok.Type)
 
 			tok = l.NextToken()
-			assert.Equal(t, token.Floating, tok.Type)
+			assert.Equal(t, token.Decimal, tok.Type)
 		})
 	})
 

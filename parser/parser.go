@@ -59,6 +59,7 @@ func New(code string) *Parser {
 	// default, -, ++, --
 	parser.prefixParseFns = map[token.TokenType]prefixParseFn{
 		token.Integer:   parser.parseInteger,
+		token.Decimal:   parser.parseDecimal,
 		token.Minus:     parser.parsePrefix,
 		token.True:      parser.parseBool,
 		token.False:     parser.parseBool,
@@ -270,6 +271,14 @@ func (p *Parser) parseInteger() ast.Expression {
 		p.Errors = append(p.Errors, err)
 	}
 	return &ast.IntegerLiteral{Token: p.currTok, Value: value}
+}
+
+func (p *Parser) parseDecimal() ast.Expression {
+	value, err := strconv.ParseFloat(p.currTok.Literal, 64)
+	if err != nil {
+		p.Errors = append(p.Errors, err)
+	}
+	return &ast.DecimalLiteral{Token: p.currTok, Value: value}
 }
 
 func (p *Parser) parseBool() ast.Expression {

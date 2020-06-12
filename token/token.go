@@ -38,7 +38,7 @@ const (
 
 	Identifier TokenType = "identifier"
 	Integer    TokenType = "integer"
-	Floating   TokenType = "floating"
+	Decimal    TokenType = "floating"
 
 	True  TokenType = "true"
 	False TokenType = "false"

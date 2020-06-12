@@ -50,7 +50,7 @@ func (es *ExpressionStatement) TokenLiteral() string {
 }
 func (es *ExpressionStatement) String() string {
 	if es.Expression != nil {
-		return es.Expression.String()
+		return es.Expression.String() + ";"
 	}
 	return ""
 }
