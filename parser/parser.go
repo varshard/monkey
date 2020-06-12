@@ -126,7 +126,8 @@ func (p *Parser) readTokens() ast.Statement {
 }
 
 func (p *Parser) readSemicolon() bool {
-	if !p.expectToken(token.Semicolon) {
+	if !p.peekToken(token.Semicolon) {
+		p.peekError(token.Semicolon)
 		return false
 	}
 	p.advanceToken()
@@ -167,9 +168,10 @@ func (p *Parser) parseReturn() *ast.ReturnStatement {
 	s := ast.ReturnStatement{
 		Token: p.currTok,
 	}
-
-	p.advanceToken()
-	s.Value = p.parseExpression(LOWEST)
+	if !p.peekToken(token.Semicolon) {
+		p.advanceToken()
+		s.Value = p.parseExpression(LOWEST)
+	}
 	if !p.readSemicolon() {
 		return nil
 	}
@@ -194,9 +196,9 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	var leftExp ast.Expression
 	if currTok.Type == token.Identifier {
 		identifier := p.parseIdentifier()
-		p.advanceToken()
-		suffix := p.suffixParseFns[p.currTok.Type]
+		suffix := p.suffixParseFns[p.nextTok.Type]
 		if suffix != nil {
+			p.advanceToken()
 			leftExp = suffix(identifier.(*ast.Identifier))
 		} else {
 			leftExp = identifier
@@ -218,7 +220,6 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		p.advanceToken()
 		leftExp = infix(leftExp)
 	}
-
 	return leftExp
 }
 

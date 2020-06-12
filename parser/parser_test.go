@@ -6,6 +6,18 @@ import (
 	"testing"
 )
 
+func parseCode(code string) (*Parser, *ast.Program) {
+	p := New(code)
+	program := p.ParseProgram()
+
+	return p, program
+}
+
+type testInput struct {
+	input    string
+	expected string
+}
+
 func TestParser(t *testing.T) {
 	t.Run("Test New", func(t *testing.T) {
 		p := New("")
@@ -15,27 +27,7 @@ func TestParser(t *testing.T) {
 	t.Run("Test parsing let statement", func(t *testing.T) {
 		t.Run("Test let integer", func(t *testing.T) {
 			statement := "let x = 10;"
-
-			p := New(statement)
-			assert.NotNil(t, p.lexer)
-
-			program := p.ParseProgram()
-
-			assert.Equal(t, 1, len(program.Statements))
-			let, ok := program.Statements[0].(*ast.LetStatement)
-
-			assert.True(t, ok)
-
-			assert.Equal(t, "10", let.Value.TokenLiteral())
-		})
-
-		t.Run("Test let integer", func(t *testing.T) {
-			statement := "let x = 10;"
-
-			p := New(statement)
-			assert.NotNil(t, p.lexer)
-
-			program := p.ParseProgram()
+			_, program := parseCode(statement)
 
 			assert.Equal(t, 1, len(program.Statements))
 			let, ok := program.Statements[0].(*ast.LetStatement)
@@ -52,11 +44,7 @@ func TestParser(t *testing.T) {
 
 		t.Run("Test let negative", func(t *testing.T) {
 			statement := "let x = -5;"
-
-			p := New(statement)
-			assert.NotNil(t, p.lexer)
-
-			program := p.ParseProgram()
+			_, program := parseCode(statement)
 
 			assert.Equal(t, 1, len(program.Statements))
 			let, ok := program.Statements[0].(*ast.LetStatement)
@@ -72,11 +60,7 @@ func TestParser(t *testing.T) {
 
 		t.Run("Test let identifier", func(t *testing.T) {
 			statement := "let x = 10;let y = x;"
-
-			p := New(statement)
-			assert.NotNil(t, p.lexer)
-
-			program := p.ParseProgram()
+			_, program := parseCode(statement)
 
 			assert.Equal(t, 2, len(program.Statements))
 			for _, s := range program.Statements {
@@ -92,21 +76,14 @@ func TestParser(t *testing.T) {
 		})
 
 		t.Run("Test error invalid let", func(t *testing.T) {
-			statement := "let;"
-
-			p := New(statement)
-
-			p.ParseProgram()
+			p, _ := parseCode("let;")
 
 			e := p.Errors[0]
 			assert.Equal(t, "expected identifier, but got ; at 1:4", e.Error())
 		})
 
 		t.Run("Test let without =", func(t *testing.T) {
-			statement := "let x;"
-
-			p := New(statement)
-			program := p.ParseProgram()
+			_, program := parseCode("let x;")
 
 			_, ok := program.Statements[0].(*ast.LetStatement)
 
@@ -114,10 +91,7 @@ func TestParser(t *testing.T) {
 		})
 
 		t.Run("Test let without semicolon", func(t *testing.T) {
-			statement := "let x = 5"
-
-			p := New(statement)
-			p.ParseProgram()
+			p, _ := parseCode("let x = 5")
 
 			assert.Equal(t, 1, len(p.Errors))
 			assert.Equal(t, "expected ;, but got Eof at 1:9", p.Errors[0].Error())
@@ -126,11 +100,7 @@ func TestParser(t *testing.T) {
 
 	t.Run("Test parsing return statement", func(t *testing.T) {
 		t.Run("Test return an integer", func(t *testing.T) {
-			statement := "return 3;"
-
-			p := New(statement)
-
-			program := p.ParseProgram()
+			_, program := parseCode("return 3;")
 
 			assert.Equal(t, 1, len(program.Statements))
 			ret, ok := program.Statements[0].(*ast.ReturnStatement)
@@ -139,10 +109,7 @@ func TestParser(t *testing.T) {
 		})
 
 		t.Run("Test return a boolean", func(t *testing.T) {
-			statement := "return true;"
-
-			p := New(statement)
-			program := p.ParseProgram()
+			_, program := parseCode("return true;")
 
 			assert.Equal(t, 1, len(program.Statements))
 			ret, ok := program.Statements[0].(*ast.ReturnStatement)
@@ -156,10 +123,7 @@ func TestParser(t *testing.T) {
 		})
 
 		t.Run("Test return false", func(t *testing.T) {
-			statement := "return false;"
-
-			p := New(statement)
-			program := p.ParseProgram()
+			_, program := parseCode("return false;")
 
 			assert.Equal(t, 1, len(program.Statements))
 			ret, ok := program.Statements[0].(*ast.ReturnStatement)
@@ -173,10 +137,7 @@ func TestParser(t *testing.T) {
 		})
 
 		t.Run("Test return not", func(t *testing.T) {
-			statement := "return !false;"
-
-			p := New(statement)
-			program := p.ParseProgram()
+			_, program := parseCode("return !false;")
 
 			assert.Equal(t, 1, len(program.Statements))
 			ret, ok := program.Statements[0].(*ast.ReturnStatement)
@@ -190,76 +151,78 @@ func TestParser(t *testing.T) {
 		})
 
 		t.Run("Test return ++y", func(t *testing.T) {
-			statement := "return ++y;"
+			tests := []testInput{
+				{
+					input:    "return ++y;",
+					expected: "return (++y);",
+				}, {
+					input:    "return --x;",
+					expected: "return (--x);",
+				},
+			}
 
-			p := New(statement)
-			program := p.ParseProgram()
+			for _, test := range tests {
+				p, program := parseCode(test.input)
 
-			assert.Equal(t, 1, len(program.Statements))
-			ret, ok := program.Statements[0].(*ast.ReturnStatement)
+				assert.Equal(t, 0, len(p.Errors))
+				assert.Equal(t, 1, len(program.Statements))
+				ret, ok := program.Statements[0].(*ast.ReturnStatement)
 
-			assert.True(t, ok)
+				assert.True(t, ok)
 
-			prefix, ok := ret.Value.(*ast.PrefixExpression)
-
-			assert.Equal(t, "++", prefix.Operator)
-			assert.Equal(t, "y", prefix.Right.String())
+				assert.Equal(t, test.expected, ret.String())
+			}
 		})
 
-		t.Run("Test return --x", func(t *testing.T) {
-			statement := "return --x;"
+		t.Run("Test return;", func(t *testing.T) {
+			_, program := parseCode("return;")
 
-			p := New(statement)
-			program := p.ParseProgram()
-
-			assert.Equal(t, 1, len(program.Statements))
-			ret, ok := program.Statements[0].(*ast.ReturnStatement)
-
-			assert.True(t, ok)
-
-			prefix, ok := ret.Value.(*ast.PrefixExpression)
-
-			assert.Equal(t, "--", prefix.Operator)
-			assert.Equal(t, "x", prefix.Right.String())
+			assert.Equal(t, "return;", program.Statements[0].String())
 		})
 	})
 
 	t.Run("Test parsing an expression", func(t *testing.T) {
 		t.Run("Test suffix", func(t *testing.T) {
-			inputs := []string{"x++;", "y--;"}
-			expected := []string{"(x++)", "(y--)"}
+			tests := []testInput{
+				{
+					input:    "x++;",
+					expected: "(x++)",
+				}, {
+					input:    "y--;",
+					expected: "(y--)",
+				},
+			}
 
-			for i, input := range inputs {
-				p := New(input)
-				program := p.ParseProgram()
+			for _, test := range tests {
+				p, program := parseCode(test.input)
 
 				assert.Equal(t, 0, len(p.Errors))
 
 				expression, ok := program.Statements[0].(*ast.ExpressionStatement)
 				assert.True(t, ok)
-
-				suffix, ok := expression.Expression.(*ast.SuffixExpression)
-				assert.True(t, ok)
-				assert.Equal(t, expected[i], suffix.String())
+				assert.Equal(t, test.expected, expression.String())
 			}
 		})
 
 		t.Run("Test suffix with infix", func(t *testing.T) {
-			inputs := []string{"1 + x++;", "y-- + -2;"}
-			expected := []string{"(1 + (x++))", "((y--) + (-2))"}
+			tests := []testInput{
+				{
+					input:    "1 + x++;",
+					expected: "(1 + (x++))",
+				}, {
+					input:    "y-- + -2;",
+					expected: "((y--) + (-2))",
+				},
+			}
 
-			for i, input := range inputs {
-				p := New(input)
-				program := p.ParseProgram()
+			for _, test := range tests {
+				p, program := parseCode(test.input)
 
 				assert.Equal(t, 0, len(p.Errors))
 
 				expression, ok := program.Statements[0].(*ast.ExpressionStatement)
 				assert.True(t, ok)
-
-				infix, ok := expression.Expression.(*ast.InfixExpression)
-				assert.True(t, ok)
-				assert.Equal(t, expected[i], infix.String())
+				assert.Equal(t, test.expected, expression.String())
 			}
 		})
 		t.Run("Test parsing an invalid expression", func(t *testing.T) {
@@ -300,64 +263,78 @@ func TestParser(t *testing.T) {
 		})
 
 		t.Run("Test parsing precedence", func(t *testing.T) {
-			inputs := []string{
-				"2 - 3 * 4;",
-				"2 / 3 + 4;",
+			tests := []testInput{
+				{
+					input:    "2 - 3 * 4;",
+					expected: "(2 - (3 * 4))",
+				}, {
+					input:    "2 / 3 + 4;",
+					expected: "((2 / 3) + 4)",
+				},
 			}
-			expected := []string{
-				"(2 - (3 * 4))",
-				"((2 / 3) + 4)",
-			}
-			for i, input := range inputs {
-				p := New(input)
-				program := p.ParseProgram()
+			for _, test := range tests {
+				p, program := parseCode(test.input)
 
+				assert.Equal(t, 0, len(p.Errors))
 				es, ok := program.Statements[0].(*ast.ExpressionStatement)
 				assert.True(t, ok)
 
 				infix, ok := es.Expression.(*ast.InfixExpression)
 				assert.True(t, ok)
 
-				assert.Equal(t, expected[i], infix.String())
+				assert.Equal(t, test.expected, infix.String())
 			}
 		})
 
 		t.Run("Test parsing grouped expressions", func(t *testing.T) {
-			inputs := []string{
-				"(2 - 3) * 4;",
-				"2 / (3 + 4);",
-				"(2 + 3) + 4;",
-				"(2 + 3 - 4);",
+			tests := []testInput{
+				{
+					input:    "(2 - 3) * 4;",
+					expected: "((2 - 3) * 4)",
+				},
+				{
+					input:    "2 / (3 + 4);",
+					expected: "(2 / (3 + 4))",
+				}, {
+					input:    "(2 + 3) + 4;",
+					expected: "((2 + 3) + 4)",
+				},
+				{
+					input:    "(2 + 3 - 4);",
+					expected: "((2 + 3) - 4)",
+				},
 			}
-			expected := []string{
-				"((2 - 3) * 4)",
-				"(2 / (3 + 4))",
-				"((2 + 3) + 4)",
-				"((2 + 3) - 4)",
-			}
-			for i, input := range inputs {
-				p := New(input)
-				program := p.ParseProgram()
+			for _, test := range tests {
+				p, program := parseCode(test.input)
 
+				assert.Equal(t, 0, len(p.Errors))
 				es, ok := program.Statements[0].(*ast.ExpressionStatement)
 				assert.True(t, ok)
 
 				infix, ok := es.Expression.(*ast.InfixExpression)
 				assert.True(t, ok)
 
-				assert.Equal(t, expected[i], infix.String())
+				assert.Equal(t, test.expected, infix.String())
+			}
+		})
+
+		t.Run("Test parsing prefix expression in a grouped expression", func(t *testing.T) {
+			tests := []testInput{
+				{
+					input:    "(2);",
+					expected: "2",
+				},
 			}
 
-			p := New("(2);")
-			program := p.ParseProgram()
+			for _, test := range tests {
+				p, program := parseCode(test.input)
 
-			es, ok := program.Statements[0].(*ast.ExpressionStatement)
-			assert.True(t, ok)
+				assert.Equal(t, 0, len(p.Errors))
+				es, ok := program.Statements[0].(*ast.ExpressionStatement)
+				assert.True(t, ok)
 
-			integer, ok := es.Expression.(*ast.IntegerLiteral)
-			assert.True(t, ok)
-
-			assert.Equal(t, "2", integer.String())
+				assert.Equal(t, test.expected, es.String())
+			}
 		})
 	})
 }
