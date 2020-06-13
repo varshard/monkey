@@ -15,7 +15,9 @@ func (s LetStatement) TokenLiteral() string {
 	return s.Token.Literal
 }
 
-func (s *LetStatement) statementNode() {}
+func (s LetStatement) statementNode() {
+	panic("implement me")
+}
 
 func (s LetStatement) String() string {
 	var out bytes.Buffer

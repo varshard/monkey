@@ -97,6 +97,14 @@ func TestNextToken(t *testing.T) {
 		assert.Equal(t, "varCount69", tok.Literal)
 	})
 
+	t.Run("function", func(t *testing.T) {
+		l := New("fn")
+
+		tok := l.NextToken()
+		assert.Equal(t, token.Function, tok.Type)
+		assert.Equal(t, "fn", tok.Literal)
+	})
+
 	t.Run("Literal integer", func(t *testing.T) {
 		t.Run("Positive", func(t *testing.T) {
 			l := New("123")

@@ -14,7 +14,9 @@ func (r ReturnStatement) TokenLiteral() string {
 	return r.Token.Literal
 }
 
-func (r *ReturnStatement) statementNode() {}
+func (r ReturnStatement) statementNode() {
+	panic("implement me")
+}
 
 func (r ReturnStatement) String() string {
 	var out bytes.Buffer

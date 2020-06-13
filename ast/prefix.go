@@ -15,7 +15,9 @@ func (p PrefixExpression) TokenLiteral() string {
 	return p.Token.Literal
 }
 
-func (p PrefixExpression) expressionNode() {}
+func (p PrefixExpression) expressionNode() {
+	panic("implement me")
+}
 
 func (p PrefixExpression) String() string {
 	return fmt.Sprintf("(%s%s)", p.Operator, p.Right.String())

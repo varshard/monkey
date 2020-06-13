@@ -13,7 +13,7 @@ func parseCode(code string) (*Parser, *ast.Program) {
 	return p, program
 }
 
-type testInput struct {
+type TestInput struct {
 	input    string
 	expected string
 }
@@ -151,7 +151,7 @@ func TestParser(t *testing.T) {
 		})
 
 		t.Run("Test return ++y", func(t *testing.T) {
-			tests := []testInput{
+			tests := []TestInput{
 				{
 					input:    "return ++y;",
 					expected: "return (++y);",
@@ -183,7 +183,7 @@ func TestParser(t *testing.T) {
 
 	t.Run("Test parsing an expression", func(t *testing.T) {
 		t.Run("Test suffix", func(t *testing.T) {
-			tests := []testInput{
+			tests := []TestInput{
 				{
 					input:    "x++;",
 					expected: "(x++)",
@@ -209,7 +209,7 @@ func TestParser(t *testing.T) {
 		})
 
 		t.Run("Test suffix with infix", func(t *testing.T) {
-			tests := []testInput{
+			tests := []TestInput{
 				{
 					input:    "1 + x++;",
 					expected: "(1 + (x++))",
@@ -272,7 +272,7 @@ func TestParser(t *testing.T) {
 		})
 
 		t.Run("Test parsing precedence", func(t *testing.T) {
-			tests := []testInput{
+			tests := []TestInput{
 				{
 					input:    "2 - 3 * 4;",
 					expected: "(2 - (3 * 4))",
@@ -296,7 +296,7 @@ func TestParser(t *testing.T) {
 		})
 
 		t.Run("Test parsing grouped expressions", func(t *testing.T) {
-			tests := []testInput{
+			tests := []TestInput{
 				{
 					input:    "(2 - 3) * 4;",
 					expected: "((2 - 3) * 4)",
@@ -347,7 +347,7 @@ func TestParser(t *testing.T) {
 		})
 
 		t.Run("Test parsing prefix expression in a grouped expression", func(t *testing.T) {
-			tests := []testInput{
+			tests := []TestInput{
 				{
 					input:    "(2);",
 					expected: "2;",
@@ -367,5 +367,23 @@ func TestParser(t *testing.T) {
 				assert.Equal(t, test.expected, es.String())
 			}
 		})
+	})
+
+	t.Run("Test parsing functions", func(t *testing.T) {
+		tests := []TestInput{
+			{
+				input: `fn() { return 1; }`,
+				expected: "fn {" +
+					"return 1;" +
+					"}",
+			},
+		}
+
+		for _, test := range tests {
+			p, program := parseCode(test.input)
+
+			assert.Equal(t, 0, p.Errors)
+			assert.Equal(t, test.expected, program.Statements[0].String())
+		}
 	})
 }

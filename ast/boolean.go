@@ -15,4 +15,6 @@ func (b Boolean) String() string {
 	return b.TokenLiteral()
 }
 
-func (b *Boolean) expressionNode() {}
+func (b *Boolean) expressionNode() {
+	panic("implement me")
+}

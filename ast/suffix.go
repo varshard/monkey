@@ -19,4 +19,6 @@ func (s SuffixExpression) String() string {
 	return fmt.Sprintf("(%s%s)", s.Left.String(), s.Operator)
 }
 
-func (s SuffixExpression) expressionNode() {}
+func (s SuffixExpression) expressionNode() {
+	panic("implement me")
+}
