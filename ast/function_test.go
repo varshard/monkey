@@ -28,7 +28,7 @@ func TestFunctionLiteral_String(t *testing.T) {
 			Literal: "func",
 		},
 		Parameters: []Identifier{a, b},
-		Body: BlockStatement{
+		Body: &BlockStatement{
 			Token: token.Token{
 				Type:    token.Lbrace,
 				Literal: "{",
@@ -53,5 +53,5 @@ func TestFunctionLiteral_String(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, "func (a, b) {\nreturn (a + b);\n}", function.String())
+	assert.Equal(t, "func(a, b) {\nreturn (a + b);\n}", function.String())
 }

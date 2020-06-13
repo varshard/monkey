@@ -67,6 +67,7 @@ func New(code string) *Parser {
 		token.Increment: parser.parsePrefix,
 		token.Decrement: parser.parsePrefix,
 		token.Lparen:    parser.parseGroupedExpression,
+		token.Function:  parser.parseFunction,
 	}
 
 	parser.infixParseFns = map[token.TokenType]infixParseFn{
@@ -295,6 +296,73 @@ func (p *Parser) parseBool() ast.Expression {
 		Token: p.currTok,
 		Value: boolean,
 	}
+}
+
+func (p *Parser) parseFunction() ast.Expression {
+	function := ast.FunctionLiteral{
+		Token: p.currTok,
+	}
+
+	function.Parameters = p.parseFunctionParams()
+	function.Body = p.parseBlock()
+	return function
+}
+
+func (p *Parser) parseBlock() *ast.BlockStatement {
+	if !p.expectToken(token.Lbrace) {
+		return nil
+	}
+	p.advanceToken()
+	block := ast.BlockStatement{
+		Token: p.currTok,
+	}
+
+	for !p.peekToken(token.Rbrace) {
+		p.advanceToken()
+		statement := p.readTokens()
+		if statement != nil {
+			block.PushStatement(statement)
+		} else {
+			break
+		}
+	}
+
+	if !p.expectToken(token.Rbrace) {
+		return nil
+	}
+	p.advanceToken()
+
+	return &block
+}
+
+func (p *Parser) parseFunctionParams() []ast.Identifier {
+	params := make([]ast.Identifier, 0)
+
+	if !p.expectToken(token.Lparen) {
+		return nil
+	}
+	// skip (
+	p.advanceToken()
+	for p.peekToken(token.Identifier) {
+		p.advanceToken()
+		params = append(params, ast.Identifier{
+			Name:  p.currTok.Literal,
+			Token: p.currTok,
+		})
+
+		if p.peekToken(token.Comma) {
+			// skip ,
+			p.advanceToken()
+		}
+	}
+
+	if !p.expectToken(token.Rparen) {
+		return nil
+	}
+	// skip )
+	p.advanceToken()
+
+	return params
 }
 
 func (p *Parser) parseSuffix(identifier *ast.Identifier) ast.Expression {

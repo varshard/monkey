@@ -372,17 +372,22 @@ func TestParser(t *testing.T) {
 	t.Run("Test parsing functions", func(t *testing.T) {
 		tests := []TestInput{
 			{
-				input: `fn() { return 1; }`,
-				expected: "fn {" +
-					"return 1;" +
-					"}",
+				input: `let cb = fn() { 
+					return 1; 
+				};`,
+				expected: "let cb = fn() {\nreturn 1;\n};",
+			}, {
+				input: `let add = fn(a, b) {
+					return a + b;
+				};`,
+				expected: "let add = fn(a, b) {\nreturn (a + b);\n};",
 			},
 		}
 
 		for _, test := range tests {
 			p, program := parseCode(test.input)
 
-			assert.Equal(t, 0, p.Errors)
+			assert.Equal(t, 0, len(p.Errors))
 			assert.Equal(t, test.expected, program.Statements[0].String())
 		}
 	})

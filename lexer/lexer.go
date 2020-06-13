@@ -209,7 +209,7 @@ func (l *Lexer) readNumber() token.Token {
 func (l *Lexer) skipWhiteSpaces() {
 	for {
 		peekedChar := l.peekChar()
-		if ' ' != peekedChar && '\t' != peekedChar {
+		if ' ' != peekedChar && '\t' != peekedChar && '\n' != peekedChar {
 			break
 		}
 		l.ReadChar()
