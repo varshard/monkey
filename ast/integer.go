@@ -15,6 +15,6 @@ func (i IntegerLiteral) String() string {
 	return i.TokenLiteral()
 }
 
-func (i *IntegerLiteral) expressionNode() {
+func (i IntegerLiteral) expressionNode() {
 	panic("implement me")
 }
