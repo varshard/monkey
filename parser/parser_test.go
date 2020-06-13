@@ -312,6 +312,25 @@ func TestParser(t *testing.T) {
 					input:    "(2 + 3 - 4);",
 					expected: "((2 + 3) - 4)",
 				},
+				{
+					input:    "true == true;",
+					expected: "(true == true)",
+				}, {
+					input:    "(2 + 2) >= 3;",
+					expected: "((2 + 2) >= 3)",
+				}, {
+					input:    "false != true;",
+					expected: "(false != true)",
+				}, {
+					input:    "1 > 0;",
+					expected: "(1 > 0)",
+				}, {
+					input:    "1 < 0;",
+					expected: "(1 < 0)",
+				}, {
+					input:    "1 <= 0;",
+					expected: "(1 <= 0)",
+				},
 			}
 			for _, test := range tests {
 				p, program := parseCode(test.input)

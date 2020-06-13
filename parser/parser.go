@@ -78,6 +78,8 @@ func New(code string) *Parser {
 		token.MoreThanEqual: parser.parseInfixExpression,
 		token.LessThan:      parser.parseInfixExpression,
 		token.LessThanEqual: parser.parseInfixExpression,
+		token.Equal:         parser.parseInfixExpression,
+		token.NotEqual:      parser.parseInfixExpression,
 	}
 
 	parser.suffixParseFns = map[token.TokenType]suffixParseFn{
