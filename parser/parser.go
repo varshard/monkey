@@ -16,7 +16,7 @@ const (
 	LESSGREATER
 	SUM
 	PRODUCT
-	PREFIX
+	CALL
 )
 
 var precedences = map[token.TokenType]int{
@@ -30,7 +30,7 @@ var precedences = map[token.TokenType]int{
 	token.Minus:         SUM,
 	token.Multiply:      PRODUCT,
 	token.Divide:        PRODUCT,
-	token.Lparen:        PREFIX,
+	token.Lparen:        CALL,
 }
 
 type (
@@ -195,6 +195,33 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	return &s
 }
 
+func (p *Parser) parseFunctionCall(function ast.Expression) ast.Expression {
+	call := ast.CallExpression{
+		Token:    p.currTok,
+		Function: function,
+	}
+
+	if p.peekToken(token.Rparen) {
+		p.advanceToken()
+		return call
+	}
+
+	p.advanceToken()
+	call.PushExpressions(p.parseExpression(LOWEST))
+
+	for p.peekToken(token.Comma) {
+		p.advanceToken()
+		p.advanceToken()
+		call.PushExpressions(p.parseExpression(LOWEST))
+	}
+
+	if !p.expectToken(token.Rparen) {
+		return nil
+	}
+	p.advanceToken()
+	return call
+}
+
 func (p *Parser) parseIdentifier() ast.Expression {
 	identifier := p.parseRawIdentifier()
 	suffix := p.suffixParseFns[p.nextTok.Type]
@@ -202,6 +229,10 @@ func (p *Parser) parseIdentifier() ast.Expression {
 		p.advanceToken()
 		return suffix(identifier.(*ast.Identifier))
 	} else {
+		if p.peekToken(token.Lparen) {
+			p.advanceToken()
+			return p.parseFunctionCall(identifier)
+		}
 		return identifier
 	}
 }
@@ -306,6 +337,13 @@ func (p *Parser) parseFunction() ast.Expression {
 
 	function.Parameters = p.parseFunctionParams()
 	function.Body = p.parseBlock()
+
+	// Call function literal
+	if p.peekToken(token.Lparen) {
+		p.advanceToken()
+		return p.parseFunctionCall(function)
+	}
+
 	return function
 }
 
