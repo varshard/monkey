@@ -7,7 +7,8 @@ import (
 )
 
 type CallExpression struct {
-	Token      token.Token
+	Token      token.Token // (
+	Function   Expression  // Function name or function literal
 	Parameters []Expression
 }
 
@@ -21,9 +22,13 @@ func (c CallExpression) String() string {
 		expressions = append(expressions, exp.String())
 	}
 
-	return fmt.Sprintf("%s(%s)", c.TokenLiteral(), strings.Join(expressions, ", "))
+	return fmt.Sprintf("%s(%s)", c.Function.String(), strings.Join(expressions, ", "))
 }
 
 func (c CallExpression) expressionNode() {
 	panic("implement me")
+}
+
+func (c *CallExpression) PushExpressions(exp Expression) {
+	c.Parameters = append(c.Parameters, exp)
 }
