@@ -58,16 +58,17 @@ func New(code string) *Parser {
 
 	// default, -, ++, --
 	parser.prefixParseFns = map[token.TokenType]prefixParseFn{
-		token.Integer:   parser.parseInteger,
-		token.Decimal:   parser.parseDecimal,
-		token.Minus:     parser.parsePrefix,
-		token.True:      parser.parseBool,
-		token.False:     parser.parseBool,
-		token.Bang:      parser.parsePrefix,
-		token.Increment: parser.parsePrefix,
-		token.Decrement: parser.parsePrefix,
-		token.Lparen:    parser.parseGroupedExpression,
-		token.Function:  parser.parseFunction,
+		token.Identifier: parser.parseIdentifier,
+		token.Integer:    parser.parseInteger,
+		token.Decimal:    parser.parseDecimal,
+		token.Minus:      parser.parsePrefix,
+		token.True:       parser.parseBool,
+		token.False:      parser.parseBool,
+		token.Bang:       parser.parsePrefix,
+		token.Increment:  parser.parsePrefix,
+		token.Decrement:  parser.parsePrefix,
+		token.Lparen:     parser.parseGroupedExpression,
+		token.Function:   parser.parseFunction,
 	}
 
 	parser.infixParseFns = map[token.TokenType]infixParseFn{
@@ -194,27 +195,27 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	return &s
 }
 
+func (p *Parser) parseIdentifier() ast.Expression {
+	identifier := p.parseRawIdentifier()
+	suffix := p.suffixParseFns[p.nextTok.Type]
+	if suffix != nil {
+		p.advanceToken()
+		return suffix(identifier.(*ast.Identifier))
+	} else {
+		return identifier
+	}
+}
+
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	currTok := p.currTok
 
 	var leftExp ast.Expression
-	if currTok.Type == token.Identifier {
-		identifier := p.parseIdentifier()
-		suffix := p.suffixParseFns[p.nextTok.Type]
-		if suffix != nil {
-			p.advanceToken()
-			leftExp = suffix(identifier.(*ast.Identifier))
-		} else {
-			leftExp = identifier
-		}
-	} else {
-		prefix := p.prefixParseFns[currTok.Type]
-		if prefix == nil {
-			p.Errors = append(p.Errors, errors.New(fmt.Sprintf("expected expression, but found %s at %d:%d", currTok.Literal, currTok.Line, currTok.Col)))
-			return nil
-		}
-		leftExp = prefix()
+	prefix := p.prefixParseFns[currTok.Type]
+	if prefix == nil {
+		p.Errors = append(p.Errors, errors.New(fmt.Sprintf("expected expression, but found %s at %d:%d", currTok.Literal, currTok.Line, currTok.Col)))
+		return nil
 	}
+	leftExp = prefix()
 	// precedence > p.peekPrecedence is handled automatically when parseExpression is called the next time
 	for !p.peekToken(token.Semicolon) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.nextTok.Type]
@@ -254,7 +255,7 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	return exp
 }
 
-func (p *Parser) parseIdentifier() ast.Expression {
+func (p *Parser) parseRawIdentifier() ast.Expression {
 	return &ast.Identifier{Token: p.currTok, Name: p.currTok.Literal}
 }
 
