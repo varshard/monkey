@@ -124,6 +124,8 @@ func (p *Parser) readTokens() ast.Statement {
 		statement = p.parseLet()
 	} else if p.currTok.Type == token.Return {
 		statement = p.parseReturn()
+	} else if p.currTok.Type == token.Identifier && p.nextTok.Type == token.Assign {
+		statement = p.parseAssignment()
 	} else {
 		statement = p.parseExpressionStatement()
 	}
@@ -182,6 +184,30 @@ func (p *Parser) parseReturn() *ast.ReturnStatement {
 		return nil
 	}
 	return &s
+}
+
+func (p *Parser) parseAssignment() *ast.AssignmentStatement {
+	a := ast.AssignmentStatement{
+		Identifier: ast.Identifier{
+			Token: p.currTok,
+			Name:  p.currTok.Literal,
+		},
+	}
+
+	if !p.expectToken(token.Assign) {
+		return nil
+	}
+
+	p.advanceToken()
+	a.Token = p.currTok
+
+	p.advanceToken()
+	a.Value = p.parseExpression(LOWEST)
+
+	if !p.readSemicolon() {
+		return nil
+	}
+	return &a
 }
 
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {

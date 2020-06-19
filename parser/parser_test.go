@@ -98,6 +98,15 @@ func TestParser(t *testing.T) {
 		})
 	})
 
+	t.Run("Test parsing an assignment", func(t *testing.T) {
+		p, program := parseCode("a = 7;")
+
+		assert.Equal(t, 0, len(p.Errors))
+		assign := program.Statements[0].(*ast.AssignmentStatement)
+		assert.Equal(t, "a", assign.Identifier.Name)
+		assert.Equal(t, 7, assign.Value.(*ast.IntegerLiteral).Value)
+	})
+
 	t.Run("Test parsing return statement", func(t *testing.T) {
 		t.Run("Test return an integer", func(t *testing.T) {
 			_, program := parseCode("return 3;")
