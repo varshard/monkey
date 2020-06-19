@@ -9,6 +9,7 @@ import (
 	"strconv"
 )
 
+// TODO: parse if, else, else if, loop
 const (
 	_ int = iota
 	LOWEST
@@ -247,7 +248,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		return nil
 	}
 	leftExp = prefix()
-	// precedence > p.peekPrecedence is handled automatically when parseExpression is called the next time
+	// precedence > p.peekPrecedence will break the recursion and handled automatically when parseExpression is called the next time
 	for !p.peekToken(token.Semicolon) && precedence < p.peekPrecedence() {
 		infix := p.infixParseFns[p.nextTok.Type]
 		if infix == nil {
