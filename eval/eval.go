@@ -4,6 +4,7 @@ import (
 	"github.com/varshard/monkey/ast"
 	"github.com/varshard/monkey/object"
 	"github.com/varshard/monkey/token"
+	"reflect"
 )
 
 func Eval(node ast.Node) object.Object {
@@ -26,33 +27,35 @@ func evalInfixExpression(node ast.InfixExpression) object.Object {
 	switch node.Token.Type {
 	case token.Plus:
 		// TODO: support decimal
-		//leftType := reflect.TypeOf(left)
-		//rightType := reflect.TypeOf(right)
-		//
-		//isFloat := false
-		//var leftObj object.Object
-		//var rightObj object.Object
-		//if leftType.ConvertibleTo(reflect.TypeOf(object.DecimalObject{})) {
-		//	isFloat = true
-		//	leftObj = left.(object.DecimalObject)
-		//} else {
-		//	leftObj = left.(object.IntegerObject)
-		//}
-		//if rightType.ConvertibleTo(reflect.TypeOf(object.DecimalObject{})) {
-		//	isFloat = true
-		//	rightObj = right.(object.DecimalObject)
-		//} else {
-		//	rightObj = right.(object.IntegerObject)
-		//}
-		//
-		//if isFloat {
-		//	return object.DecimalObject{
-		//		Value: leftObj.Value + rightObj.Value,
-		//	}
-		//}
-		return object.IntegerObject{
-			Value: left.(object.IntegerObject).Value + right.(object.IntegerObject).Value,
+		leftType := reflect.TypeOf(left)
+		rightType := reflect.TypeOf(right)
+
+		if leftType.ConvertibleTo(reflect.TypeOf(object.DecimalObject{})) {
+			leftObj := left.(object.DecimalObject)
+			if rightType.ConvertibleTo(reflect.TypeOf(object.DecimalObject{})) {
+				rightObj := right.(object.DecimalObject)
+				return object.DecimalObject{Value: leftObj.Value + rightObj.Value}
+			} else if rightType.ConvertibleTo(reflect.TypeOf(object.IntegerObject{})) {
+				rightObj := right.(object.IntegerObject)
+				return object.DecimalObject{Value: leftObj.Value + float64(rightObj.Value)}
+			} else {
+				// TODO: handle an unsupported type
+				return nil
+			}
+		} else if leftType.ConvertibleTo(reflect.TypeOf(object.IntegerObject{})) {
+			leftObj := left.(object.IntegerObject)
+			if rightType.ConvertibleTo(reflect.TypeOf(object.DecimalObject{})) {
+				rightObj := right.(object.DecimalObject)
+				return object.DecimalObject{Value: float64(leftObj.Value) + rightObj.Value}
+			} else if rightType.ConvertibleTo(reflect.TypeOf(object.IntegerObject{})) {
+				rightObj := right.(object.IntegerObject)
+				return object.IntegerObject{Value: leftObj.Value + rightObj.Value}
+			} else {
+				// TODO: handle an unsupported type
+				return nil
+			}
 		}
+		// TODO: handle an unsupported combination
 	}
 	return nil
 }
