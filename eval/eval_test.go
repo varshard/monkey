@@ -18,11 +18,86 @@ func Test_Eval(t *testing.T) {
 				},
 				Value: 5,
 			}
-			intObjc, ok := Eval(node).(object.IntegerObject)
+			intObj, ok := Eval(node).(object.IntegerObject)
 
 			assert.True(t, ok)
-			assert.Equal(t, 5, intObjc.Value)
-			assert.Equal(t, object.Integer, intObjc.Type())
+			assert.Equal(t, 5, intObj.Value)
+			assert.Equal(t, object.Integer, intObj.Type())
+		})
+
+		t.Run("Test eval a decimal literal", func(t *testing.T) {
+			node := ast.DecimalLiteral{
+				Token: token.Token{
+					Type:    token.Decimal,
+					Literal: "5.0",
+				},
+				Value: 5.0,
+			}
+			obj, ok := Eval(node).(object.DecimalObject)
+
+			assert.True(t, ok)
+			assert.Equal(t, 5.0, obj.Value)
+			assert.Equal(t, object.Decimal, obj.Type())
+		})
+	})
+
+	t.Run("Test eval infix", func(t *testing.T) {
+		t.Run("Test eval int + int", func(t *testing.T) {
+			node := ast.InfixExpression{
+				Operator: "+",
+				Left: ast.IntegerLiteral{
+					Token: token.Token{
+						Literal: "3",
+						Type:    token.Integer,
+					},
+					Value: 3,
+				},
+				Right: ast.IntegerLiteral{
+					Token: token.Token{
+						Literal: "2",
+						Type:    token.Integer,
+					},
+					Value: 2,
+				},
+				Token: token.Token{
+					Literal: "+",
+					Type:    token.Plus,
+				},
+			}
+
+			obj, ok := Eval(node).(object.IntegerObject)
+
+			assert.True(t, ok)
+			assert.Equal(t, 5, obj.Value)
+		})
+
+		t.Run("Test eval decimal + int", func(t *testing.T) {
+			node := ast.InfixExpression{
+				Operator: "+",
+				Left: ast.DecimalLiteral{
+					Token: token.Token{
+						Literal: "3.5",
+						Type:    token.Integer,
+					},
+					Value: 3,
+				},
+				Right: ast.IntegerLiteral{
+					Token: token.Token{
+						Literal: "2",
+						Type:    token.Integer,
+					},
+					Value: 2,
+				},
+				Token: token.Token{
+					Literal: "+",
+					Type:    token.Plus,
+				},
+			}
+
+			obj, ok := Eval(node).(object.DecimalObject)
+
+			assert.True(t, ok)
+			assert.Equal(t, 5.5, obj.Value)
 		})
 	})
 }
