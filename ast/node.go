@@ -42,7 +42,7 @@ func (p *Program) PushStatement(s Statement) {
 	p.Statements = append(p.Statements, s)
 }
 
-func (p *Program) String() string {
+func (p Program) String() string {
 	lines := make([]string, 0)
 	for _, s := range p.Statements {
 		lines = append(lines, s.String())
@@ -56,7 +56,7 @@ type ExpressionStatement struct {
 	Expression Expression
 }
 
-func (es *ExpressionStatement) statementNode() {
+func (es ExpressionStatement) statementNode() {
 	panic("Implement me")
 }
 func (es ExpressionStatement) TokenLiteral() string {

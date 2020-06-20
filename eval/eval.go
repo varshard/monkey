@@ -9,20 +9,49 @@ import (
 
 func Eval(node ast.Node) object.Object {
 	switch node := node.(type) {
-	case ast.IntegerLiteral:
-		return evalInteger(node)
-	case ast.DecimalLiteral:
-		return evalDecimal(node)
-	case ast.InfixExpression:
-		return evalInfixExpression(node)
+	case *ast.Program:
+		return evalProgram(node)
+	case ast.Statement:
+		return evalStatement(node)
+	default:
+		return nil
 	}
-
-	return nil
 }
 
-func evalInfixExpression(node ast.InfixExpression) object.Object {
-	left := Eval(node.Left)
-	right := Eval(node.Right)
+func evalStatement(node ast.Statement) object.Object {
+	switch node := node.(type) {
+	case *ast.ExpressionStatement:
+		return evalExpression(node.Expression)
+	default:
+		return nil
+	}
+}
+
+func evalExpression(node ast.Expression) object.Object {
+	switch node := node.(type) {
+	case *ast.IntegerLiteral:
+		return evalInteger(node)
+	case *ast.DecimalLiteral:
+		return evalDecimal(node)
+	case *ast.InfixExpression:
+		return evalInfixExpression(node)
+	default:
+		return nil
+	}
+}
+
+func evalProgram(node *ast.Program) object.Object {
+	var result object.Object
+	for _, statement := range node.Statements {
+		result = Eval(statement)
+	}
+
+	return result
+}
+
+func evalInfixExpression(node *ast.InfixExpression) object.Object {
+	left := evalExpression(node.Left)
+	right := evalExpression(node.Right)
 
 	switch node.Token.Type {
 	case token.Plus:
@@ -60,12 +89,12 @@ func evalInfixExpression(node ast.InfixExpression) object.Object {
 	return nil
 }
 
-func evalInteger(intNode ast.IntegerLiteral) object.IntegerObject {
+func evalInteger(intNode *ast.IntegerLiteral) object.IntegerObject {
 	return object.IntegerObject{
 		Value: intNode.Value,
 	}
 }
 
-func evalDecimal(node ast.DecimalLiteral) object.DecimalObject {
+func evalDecimal(node *ast.DecimalLiteral) object.DecimalObject {
 	return object.DecimalObject{Value: node.Value}
 }
