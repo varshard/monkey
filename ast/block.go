@@ -1,9 +1,9 @@
 package ast
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/varshard/monkey/token"
+	"strings"
 )
 
 type BlockStatement struct {
@@ -16,15 +16,12 @@ func (b BlockStatement) TokenLiteral() string {
 }
 
 func (b BlockStatement) String() string {
-	buffer := bytes.Buffer{}
-
-	buffer.WriteString("{\n")
+	lines := make([]string, 0)
 	for _, s := range b.Statements {
-		buffer.WriteString(fmt.Sprintf("%s\n", s.String()))
+		lines = append(lines, s.String())
 	}
-	buffer.WriteString("}")
 
-	return buffer.String()
+	return fmt.Sprintf("{\n%s\n}", strings.Join(lines, "\n"))
 }
 
 func (b BlockStatement) statementNode() {

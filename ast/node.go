@@ -1,6 +1,9 @@
 package ast
 
-import "github.com/varshard/monkey/token"
+import (
+	"github.com/varshard/monkey/token"
+	"strings"
+)
 
 type Node interface {
 	TokenLiteral() string
@@ -37,6 +40,15 @@ func (p Program) TokenLiteral() string {
 
 func (p *Program) PushStatement(s Statement) {
 	p.Statements = append(p.Statements, s)
+}
+
+func (p *Program) String() string {
+	lines := make([]string, 0)
+	for _, s := range p.Statements {
+		lines = append(lines, s.String())
+	}
+
+	return strings.Join(lines, "\n")
 }
 
 type ExpressionStatement struct {
