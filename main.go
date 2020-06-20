@@ -1,9 +1,12 @@
 package main
 
 import (
-	"github.com/varshard/monkey/lexer"
+	"bufio"
+	"github.com/varshard/monkey/repl"
+	"os"
 )
 
 func main() {
-	lexer.New("")
+	io := bufio.NewReader(os.Stdin)
+	repl.Run(io)
 }

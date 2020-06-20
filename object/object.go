@@ -11,4 +11,5 @@ const (
 
 type Object interface {
 	Type() ObjectType
+	String() string
 }
