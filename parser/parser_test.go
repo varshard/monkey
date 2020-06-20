@@ -102,7 +102,10 @@ func TestParser(t *testing.T) {
 		p, program := parseCode("a = 7;")
 
 		assert.Equal(t, 0, len(p.Errors))
-		assign := program.Statements[0].(*ast.AssignmentStatement)
+		exp := program.Statements[0].(*ast.ExpressionStatement)
+		assign, ok := exp.Expression.(ast.Assignment)
+
+		assert.True(t, ok)
 		assert.Equal(t, "a", assign.Identifier.Name)
 		assert.Equal(t, 7, assign.Value.(*ast.IntegerLiteral).Value)
 	})

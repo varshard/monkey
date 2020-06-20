@@ -6,13 +6,13 @@ import (
 	"testing"
 )
 
-func TestAssignmentStatement_String(t *testing.T) {
-	a := AssignmentStatement{
+func TestAssignment_String(t *testing.T) {
+	a := Assignment{
 		Token: token.Token{
 			Literal: "=",
 			Type:    token.Assign,
 		},
-		Identifier: Identifier{
+		Identifier: &Identifier{
 			Token: token.Token{
 				Type:    token.Identifier,
 				Literal: "a",
@@ -28,5 +28,5 @@ func TestAssignmentStatement_String(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, "a = 7;", a.String())
+	assert.Equal(t, "a = 7", a.String())
 }

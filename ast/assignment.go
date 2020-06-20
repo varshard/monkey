@@ -5,20 +5,20 @@ import (
 	"github.com/varshard/monkey/token"
 )
 
-type AssignmentStatement struct {
+type Assignment struct {
 	Token      token.Token
-	Identifier Identifier
+	Identifier *Identifier
 	Value      Expression
 }
 
-func (a AssignmentStatement) TokenLiteral() string {
+func (a Assignment) TokenLiteral() string {
 	return a.Token.Literal
 }
 
-func (a AssignmentStatement) String() string {
-	return fmt.Sprintf("%s = %s;", a.Identifier.String(), a.Value.String())
+func (a Assignment) String() string {
+	return fmt.Sprintf("%s = %s", a.Identifier.String(), a.Value.String())
 }
 
-func (a AssignmentStatement) statementNode() {
+func (a Assignment) expressionNode() {
 	panic("implement me")
 }
