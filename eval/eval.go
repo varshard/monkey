@@ -1,11 +1,16 @@
 package eval
 
 import (
+	"errors"
+	"fmt"
 	"github.com/varshard/monkey/ast"
 	"github.com/varshard/monkey/object"
 	"github.com/varshard/monkey/token"
 	"reflect"
 )
+
+type evalInfixFn func(left, right object.Object) object.Object
+type rightSideInfixMap map[string]evalInfixFn
 
 func Eval(node ast.Node) object.Object {
 	switch node := node.(type) {
@@ -25,6 +30,10 @@ func evalStatement(node ast.Statement) object.Object {
 	default:
 		return nil
 	}
+}
+
+func makeError(err error) object.Error {
+	return object.Error{Error: err}
 }
 
 func evalExpression(node ast.Expression) object.Object {
@@ -50,43 +59,110 @@ func evalProgram(node *ast.Program) object.Object {
 }
 
 func evalInfixExpression(node *ast.InfixExpression) object.Object {
+	prefixFns := map[token.TokenType]map[string]rightSideInfixMap{
+		token.Plus: {
+			"IntegerObject": map[string]evalInfixFn{
+				"IntegerObject": func(left, right object.Object) object.Object {
+					leftObj := left.(object.IntegerObject)
+					rightObj := right.(object.IntegerObject)
+
+					return object.IntegerObject{Value: leftObj.Value + rightObj.Value}
+				},
+				"DecimalObject": func(left, right object.Object) object.Object {
+					leftObj := left.(object.IntegerObject)
+					rightObj := right.(object.DecimalObject)
+
+					return object.DecimalObject{Value: float64(leftObj.Value) + rightObj.Value}
+				},
+			},
+			"DecimalObject": map[string]evalInfixFn{
+				"IntegerObject": func(left, right object.Object) object.Object {
+					leftObj := left.(object.DecimalObject)
+					rightObj := right.(object.IntegerObject)
+
+					return object.DecimalObject{Value: leftObj.Value + float64(rightObj.Value)}
+				},
+				"DecimalObject": func(left, right object.Object) object.Object {
+					leftObj := left.(object.DecimalObject)
+					rightObj := right.(object.DecimalObject)
+
+					return object.DecimalObject{Value: leftObj.Value + rightObj.Value}
+				},
+			},
+		},
+		token.Minus: {
+			"IntegerObject": map[string]evalInfixFn{
+				"IntegerObject": func(left, right object.Object) object.Object {
+					leftObj := left.(object.IntegerObject)
+					rightObj := right.(object.IntegerObject)
+
+					return object.IntegerObject{Value: leftObj.Value - rightObj.Value}
+				},
+				"DecimalObject": func(left, right object.Object) object.Object {
+					leftObj := left.(object.IntegerObject)
+					rightObj := right.(object.DecimalObject)
+
+					return object.DecimalObject{Value: float64(leftObj.Value) - rightObj.Value}
+				},
+			},
+			"DecimalObject": map[string]evalInfixFn{
+				"IntegerObject": func(left, right object.Object) object.Object {
+					leftObj := left.(object.DecimalObject)
+					rightObj := right.(object.IntegerObject)
+
+					return object.DecimalObject{Value: leftObj.Value - float64(rightObj.Value)}
+				},
+				"DecimalObject": func(left, right object.Object) object.Object {
+					leftObj := left.(object.DecimalObject)
+					rightObj := right.(object.DecimalObject)
+
+					return object.DecimalObject{Value: leftObj.Value - rightObj.Value}
+				},
+			},
+		},
+		token.Multiply: {
+			"IntegerObject": map[string]evalInfixFn{
+				"IntegerObject": func(left, right object.Object) object.Object {
+					leftObj := left.(object.IntegerObject)
+					rightObj := right.(object.IntegerObject)
+
+					return object.IntegerObject{Value: leftObj.Value * rightObj.Value}
+				},
+				"DecimalObject": func(left, right object.Object) object.Object {
+					leftObj := left.(object.IntegerObject)
+					rightObj := right.(object.DecimalObject)
+
+					return object.DecimalObject{Value: float64(leftObj.Value) * rightObj.Value}
+				},
+			},
+			"DecimalObject": map[string]evalInfixFn{
+				"IntegerObject": func(left, right object.Object) object.Object {
+					leftObj := left.(object.DecimalObject)
+					rightObj := right.(object.IntegerObject)
+
+					return object.DecimalObject{Value: leftObj.Value * float64(rightObj.Value)}
+				},
+				"DecimalObject": func(left, right object.Object) object.Object {
+					leftObj := left.(object.DecimalObject)
+					rightObj := right.(object.DecimalObject)
+
+					return object.DecimalObject{Value: leftObj.Value * rightObj.Value}
+				},
+			},
+		},
+	}
+
 	left := evalExpression(node.Left)
 	right := evalExpression(node.Right)
 
-	switch node.Token.Type {
-	case token.Plus:
-		// TODO: support decimal
-		leftType := reflect.TypeOf(left)
-		rightType := reflect.TypeOf(right)
+	leftType := reflect.TypeOf(left)
+	rightType := reflect.TypeOf(right)
+	prefixFn, ok := prefixFns[node.Token.Type][leftType.Name()][rightType.Name()]
 
-		if leftType.ConvertibleTo(reflect.TypeOf(object.DecimalObject{})) {
-			leftObj := left.(object.DecimalObject)
-			if rightType.ConvertibleTo(reflect.TypeOf(object.DecimalObject{})) {
-				rightObj := right.(object.DecimalObject)
-				return object.DecimalObject{Value: leftObj.Value + rightObj.Value}
-			} else if rightType.ConvertibleTo(reflect.TypeOf(object.IntegerObject{})) {
-				rightObj := right.(object.IntegerObject)
-				return object.DecimalObject{Value: leftObj.Value + float64(rightObj.Value)}
-			} else {
-				// TODO: handle an unsupported type
-				return nil
-			}
-		} else if leftType.ConvertibleTo(reflect.TypeOf(object.IntegerObject{})) {
-			leftObj := left.(object.IntegerObject)
-			if rightType.ConvertibleTo(reflect.TypeOf(object.DecimalObject{})) {
-				rightObj := right.(object.DecimalObject)
-				return object.DecimalObject{Value: float64(leftObj.Value) + rightObj.Value}
-			} else if rightType.ConvertibleTo(reflect.TypeOf(object.IntegerObject{})) {
-				rightObj := right.(object.IntegerObject)
-				return object.IntegerObject{Value: leftObj.Value + rightObj.Value}
-			} else {
-				// TODO: handle an unsupported type
-				return nil
-			}
-		}
-		// TODO: handle an unsupported combination
+	if !ok {
+		return makeError(errors.New(fmt.Sprintf("Operation %s between %s and %s is undefined", node.Operator, left.Type(), right.Type())))
 	}
-	return nil
+	return prefixFn(left, right)
 }
 
 func evalInteger(intNode *ast.IntegerLiteral) object.IntegerObject {
