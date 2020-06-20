@@ -9,5 +9,5 @@ func (e ExpressionObject) String() string {
 }
 
 func (e ExpressionObject) Type() ObjectType {
-	return Expression
+	return EXPRESSION
 }

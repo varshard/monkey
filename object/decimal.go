@@ -7,7 +7,7 @@ type DecimalObject struct {
 }
 
 func (d DecimalObject) Type() ObjectType {
-	return Decimal
+	return DECIMAL
 }
 
 func (d DecimalObject) String() string {

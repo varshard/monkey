@@ -11,5 +11,5 @@ func (i IntegerObject) String() string {
 }
 
 func (i IntegerObject) Type() ObjectType {
-	return Integer
+	return INTEGER
 }
