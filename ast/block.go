@@ -25,6 +25,7 @@ func (b BlockStatement) String() string {
 }
 
 func (b BlockStatement) statementNode() {
+	panic("Implement me")
 }
 
 func (b *BlockStatement) PushStatement(s Statement) {
