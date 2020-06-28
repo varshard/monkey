@@ -8,6 +8,11 @@ import (
 	"testing"
 )
 
+type TestCase struct {
+	Input    string
+	Expected string
+}
+
 func Test_Eval(t *testing.T) {
 	t.Run("Test Eval boolean", func(t *testing.T) {
 		testCases := []struct {
@@ -68,11 +73,23 @@ func Test_Eval(t *testing.T) {
 		}
 	})
 
+	t.Run("Test Eval let", func(t *testing.T) {
+		testCases := []TestCase{
+			{"let x;", "let x = null"},
+			{"let y = 3;", "let y = 3"},
+		}
+
+		for _, test := range testCases {
+			obj := evalCode(test.Input)
+			let, ok := obj.(object.Let)
+
+			assert.True(t, ok)
+			assert.Equal(t, test.Expected, let.String(), test.Input)
+		}
+	})
+
 	t.Run("Test Eval invalid infix expressions", func(t *testing.T) {
-		testCases := []struct {
-			input    string
-			expected string
-		}{
+		testCases := []TestCase{
 			{"2 + true;", fmt.Sprintf("Operation %s between %s and %s is undefined", "+", object.INTEGER, object.BOOLEAN)},
 			{"2.0 + false;", fmt.Sprintf("Operation %s between %s and %s is undefined", "+", object.DECIMAL, object.BOOLEAN)},
 			{"true - false;", fmt.Sprintf("Operation %s between %s and %s is undefined", "-", object.BOOLEAN, object.BOOLEAN)},
@@ -83,15 +100,15 @@ func Test_Eval(t *testing.T) {
 		}
 
 		for _, test := range testCases {
-			obj, ok := evalCode(test.input).(object.Error)
+			obj, ok := evalCode(test.Input).(object.Error)
 
 			assert.True(t, ok)
-			assert.Equal(t, test.expected, obj.String(), test.input)
+			assert.Equal(t, test.Expected, obj.String(), test.Input)
 		}
 	})
 }
 
 func evalCode(code string) object.Object {
 	p := parser.New(code)
-	return Eval(p.ParseProgram())
+	return ExecuteProgram(p.ParseProgram())
 }

@@ -12,21 +12,31 @@ import (
 type evalInfixFn func(left, right object.Object) object.Object
 type rightSideInfixMap map[string]evalInfixFn
 
-func Eval(node ast.Node) object.Object {
+func ExecuteProgram(node *ast.Program) object.Object {
+	scope := object.NewScope()
+	var result object.Object
+	for _, statement := range node.Statements {
+		result = Eval(statement, &scope)
+	}
+
+	return result
+}
+
+func Eval(node ast.Node, scope *object.Scope) object.Object {
 	switch node := node.(type) {
-	case *ast.Program:
-		return evalProgram(node)
 	case ast.Statement:
-		return evalStatement(node)
+		return evalStatement(node, scope)
 	default:
-		return nil
+		return makeError(errors.New("statement expected"))
 	}
 }
 
-func evalStatement(node ast.Statement) object.Object {
+func evalStatement(node ast.Statement, scope *object.Scope) object.Object {
 	switch node := node.(type) {
+	case *ast.LetStatement:
+		return evalLet(node, scope)
 	case *ast.ExpressionStatement:
-		return evalExpression(node.Expression)
+		return evalExpression(node.Expression, scope)
 	default:
 		return nil
 	}
@@ -36,7 +46,7 @@ func makeError(err error) object.Error {
 	return object.Error{Error: err}
 }
 
-func evalExpression(node ast.Expression) object.Object {
+func evalExpression(node ast.Expression, scope *object.Scope) object.Object {
 	switch node := node.(type) {
 	case *ast.Boolean:
 		return evalBoolean(node)
@@ -45,24 +55,15 @@ func evalExpression(node ast.Expression) object.Object {
 	case *ast.DecimalLiteral:
 		return evalDecimal(node)
 	case *ast.PrefixExpression:
-		return evalPrefix(node)
+		return evalPrefix(node, scope)
 	case *ast.InfixExpression:
-		return evalInfix(node)
+		return evalInfix(node, scope)
 	default:
-		return nil
+		return object.Null{}
 	}
 }
 
-func evalProgram(node *ast.Program) object.Object {
-	var result object.Object
-	for _, statement := range node.Statements {
-		result = Eval(statement)
-	}
-
-	return result
-}
-
-func evalInfix(node *ast.InfixExpression) object.Object {
+func evalInfix(node *ast.InfixExpression, scope *object.Scope) object.Object {
 	prefixFns := map[token.TokenType]map[string]rightSideInfixMap{
 		token.Plus: {
 			"IntegerObject": map[string]evalInfixFn{
@@ -156,8 +157,8 @@ func evalInfix(node *ast.InfixExpression) object.Object {
 		},
 	}
 
-	left := evalExpression(node.Left)
-	right := evalExpression(node.Right)
+	left := evalExpression(node.Left, scope)
+	right := evalExpression(node.Right, scope)
 
 	leftType := reflect.TypeOf(left)
 	rightType := reflect.TypeOf(right)
@@ -169,10 +170,10 @@ func evalInfix(node *ast.InfixExpression) object.Object {
 	return prefixFn(left, right)
 }
 
-func evalPrefix(node *ast.PrefixExpression) object.Object {
+func evalPrefix(node *ast.PrefixExpression, scope *object.Scope) object.Object {
 	switch node.Token.Type {
 	case token.Bang:
-		obj, isBool := evalExpression(node.Right).(object.BooleanObject)
+		obj, isBool := evalExpression(node.Right, scope).(object.BooleanObject)
 
 		if !isBool {
 			return makeError(errors.New(fmt.Sprintf("! of %s doesn't exist", obj.String())))
@@ -196,4 +197,15 @@ func evalDecimal(node *ast.DecimalLiteral) object.DecimalObject {
 
 func evalBoolean(node *ast.Boolean) object.BooleanObject {
 	return object.BooleanObject{Value: node.Value}
+}
+
+func evalLet(node *ast.LetStatement, scope *object.Scope) object.Object {
+	value := evalExpression(node.Value, scope)
+	let, err := object.NewLet(node.Variable.Name, scope, value)
+
+	if err != nil {
+		return makeError(err)
+	}
+
+	return let
 }

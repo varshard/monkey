@@ -9,6 +9,8 @@ const (
 	EXPRESSION ObjectType = "EXPRESSION"
 	IDENTIFIER ObjectType = "IDENTIFIER"
 	ERROR      ObjectType = "ERROR"
+	NULL       ObjectType = "NULL"
+	LET        ObjectType = "LET"
 )
 
 type Object interface {
