@@ -38,12 +38,16 @@ func makeError(err error) object.Error {
 
 func evalExpression(node ast.Expression) object.Object {
 	switch node := node.(type) {
+	case *ast.Boolean:
+		return evalBoolean(node)
 	case *ast.IntegerLiteral:
 		return evalInteger(node)
 	case *ast.DecimalLiteral:
 		return evalDecimal(node)
+	case *ast.PrefixExpression:
+		return evalPrefix(node)
 	case *ast.InfixExpression:
-		return evalInfixExpression(node)
+		return evalInfix(node)
 	default:
 		return nil
 	}
@@ -58,7 +62,7 @@ func evalProgram(node *ast.Program) object.Object {
 	return result
 }
 
-func evalInfixExpression(node *ast.InfixExpression) object.Object {
+func evalInfix(node *ast.InfixExpression) object.Object {
 	prefixFns := map[token.TokenType]map[string]rightSideInfixMap{
 		token.Plus: {
 			"IntegerObject": map[string]evalInfixFn{
@@ -165,6 +169,21 @@ func evalInfixExpression(node *ast.InfixExpression) object.Object {
 	return prefixFn(left, right)
 }
 
+func evalPrefix(node *ast.PrefixExpression) object.Object {
+	switch node.Token.Type {
+	case token.Bang:
+		obj, isBool := evalExpression(node.Right).(object.BooleanObject)
+
+		if !isBool {
+			return makeError(errors.New(fmt.Sprintf("! of %s doesn't exist", obj.String())))
+		}
+		return object.BooleanObject{Value: !obj.Value}
+
+	default:
+		return nil
+	}
+}
+
 func evalInteger(intNode *ast.IntegerLiteral) object.IntegerObject {
 	return object.IntegerObject{
 		Value: intNode.Value,
@@ -173,4 +192,8 @@ func evalInteger(intNode *ast.IntegerLiteral) object.IntegerObject {
 
 func evalDecimal(node *ast.DecimalLiteral) object.DecimalObject {
 	return object.DecimalObject{Value: node.Value}
+}
+
+func evalBoolean(node *ast.Boolean) object.BooleanObject {
+	return object.BooleanObject{Value: node.Value}
 }

@@ -8,6 +8,25 @@ import (
 )
 
 func Test_Eval(t *testing.T) {
+	t.Run("Test Eval boolean", func(t *testing.T) {
+		testCases := []struct {
+			input    string
+			expected bool
+		}{
+			{"true;", true},
+			{"false;", false},
+			{"!true;", false},
+			{"!false;", true},
+		}
+
+		for _, test := range testCases {
+			obj, ok := evalCode(test.input).(object.BooleanObject)
+
+			assert.True(t, ok)
+			assert.Equal(t, test.expected, obj.Value)
+		}
+	})
+
 	t.Run("Test Eval integer", func(t *testing.T) {
 		testCases := []struct {
 			input    string
