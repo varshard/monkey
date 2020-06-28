@@ -11,5 +11,5 @@ func (d DecimalObject) Type() ObjectType {
 }
 
 func (d DecimalObject) String() string {
-	return strconv.FormatFloat(d.Value, 'e', -1, 64)
+	return strconv.FormatFloat(d.Value, 'f', -1, 64)
 }

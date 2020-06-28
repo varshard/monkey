@@ -190,7 +190,20 @@ func evalPrefix(node *ast.PrefixExpression, scope *object.Scope) object.Object {
 			return makeError(errors.New(fmt.Sprintf("! of %s doesn't exist", obj.String())))
 		}
 		return object.BooleanObject{Value: !obj.Value}
-
+	case token.Minus:
+		right := evalExpression(node.Right, scope)
+		switch right.Type() {
+		case object.INTEGER:
+			obj := right.(object.IntegerObject)
+			obj.Value = -obj.Value
+			return obj
+		case object.DECIMAL:
+			obj := right.(object.DecimalObject)
+			obj.Value = -obj.Value
+			return obj
+		default:
+			return makeError(errors.New(fmt.Sprintf("expected an integer, but got %s", right.Type())))
+		}
 	default:
 		return nil
 	}

@@ -42,6 +42,7 @@ func Test_Eval(t *testing.T) {
 			{"2;", 2},
 			{"2 - 3;", -1},
 			{"2 * 3;", 6},
+			{"-3;", -3},
 			//{ "4/2", 2},
 		}
 
@@ -62,6 +63,7 @@ func Test_Eval(t *testing.T) {
 			{"2.5;", 2.5},
 			{"2 - 0.5;", 1.5},
 			{"2 * 3.0;", 6.0},
+			{"-4.0;", -4.0},
 			//{ "5/2", 2.5},
 		}
 
@@ -90,6 +92,7 @@ func Test_Eval(t *testing.T) {
 	t.Run("Test Eval identifier", func(t *testing.T) {
 		testCases := []TestCase{
 			{"let x = 3; x;", "3"},
+			{"let y = 4.1; -y;", "-4.1"},
 		}
 
 		for _, test := range testCases {
