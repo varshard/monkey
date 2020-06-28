@@ -54,6 +54,8 @@ func evalExpression(node ast.Expression, scope *object.Scope) object.Object {
 		return evalInteger(node)
 	case *ast.DecimalLiteral:
 		return evalDecimal(node)
+	case *ast.Identifier:
+		return evalIdentifier(node, scope)
 	case *ast.PrefixExpression:
 		return evalPrefix(node, scope)
 	case *ast.InfixExpression:
@@ -61,6 +63,15 @@ func evalExpression(node ast.Expression, scope *object.Scope) object.Object {
 	default:
 		return object.Null{}
 	}
+}
+
+func evalIdentifier(node *ast.Identifier, scope *object.Scope) object.Object {
+	name := node.Name
+	if scope.IsDeclared(name) {
+		return scope.Get(name)
+	}
+
+	return makeError(errors.New(fmt.Sprintf("%s hasn't been declared", name)))
 }
 
 func evalInfix(node *ast.InfixExpression, scope *object.Scope) object.Object {

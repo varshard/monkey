@@ -80,11 +80,22 @@ func Test_Eval(t *testing.T) {
 		}
 
 		for _, test := range testCases {
-			obj := evalCode(test.Input)
-			let, ok := obj.(object.Let)
+			let, ok := evalCode(test.Input).(object.Let)
 
 			assert.True(t, ok)
 			assert.Equal(t, test.Expected, let.String(), test.Input)
+		}
+	})
+
+	t.Run("Test Eval identifier", func(t *testing.T) {
+		testCases := []TestCase{
+			{"let x = 3; x;", "3"},
+		}
+
+		for _, test := range testCases {
+			obj := evalCode(test.Input)
+
+			assert.Equal(t, test.Expected, obj.String())
 		}
 	})
 
