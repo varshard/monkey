@@ -1,6 +1,7 @@
 package eval
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/varshard/monkey/object"
 	"github.com/varshard/monkey/parser"
@@ -64,6 +65,28 @@ func Test_Eval(t *testing.T) {
 
 			assert.True(t, ok)
 			assert.Equal(t, test.expected, obj.Value)
+		}
+	})
+
+	t.Run("Test Eval invalid infix expressions", func(t *testing.T) {
+		testCases := []struct {
+			input    string
+			expected string
+		}{
+			{"2 + true;", fmt.Sprintf("Operation %s between %s and %s is undefined", "+", object.INTEGER, object.BOOLEAN)},
+			{"2.0 + false;", fmt.Sprintf("Operation %s between %s and %s is undefined", "+", object.DECIMAL, object.BOOLEAN)},
+			{"true - false;", fmt.Sprintf("Operation %s between %s and %s is undefined", "-", object.BOOLEAN, object.BOOLEAN)},
+			{"true - 3;", fmt.Sprintf("Operation %s between %s and %s is undefined", "-", object.BOOLEAN, object.INTEGER)},
+			{"3 - true;", fmt.Sprintf("Operation %s between %s and %s is undefined", "-", object.INTEGER, object.BOOLEAN)},
+			{"2.5 + true;", fmt.Sprintf("Operation %s between %s and %s is undefined", "+", object.DECIMAL, object.BOOLEAN)},
+			{"2.5 - !true;", fmt.Sprintf("Operation %s between %s and %s is undefined", "-", object.DECIMAL, object.BOOLEAN)},
+		}
+
+		for _, test := range testCases {
+			obj, ok := evalCode(test.input).(object.Error)
+
+			assert.True(t, ok)
+			assert.Equal(t, test.expected, obj.String(), test.input)
 		}
 	})
 }
