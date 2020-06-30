@@ -11,6 +11,8 @@ const (
 	ERROR      ObjectType = "ERROR"
 	NULL       ObjectType = "NULL"
 	LET        ObjectType = "LET"
+	FUNCTION   ObjectType = "FUNCTION"
+	RETURN     ObjectType = "RETURN"
 )
 
 type Object interface {
